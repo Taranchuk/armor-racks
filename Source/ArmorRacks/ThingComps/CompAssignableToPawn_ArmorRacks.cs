@@ -8,32 +8,16 @@ namespace ArmorRacks.ThingComps
     public class CompAssignableToPawn_ArmorRacks : CompAssignableToPawn
     {
         public new int MaxAssignedPawnsCount => 1;
-
         public override void TryAssignPawn(Pawn pawn)
         {
             if (this.assignedPawns.Contains(pawn))
                 return;
-            var racks = pawn.Map.listerBuildings.AllBuildingsColonistOfClass<ArmorRack>();
-            foreach (var rack in racks)
-            {
-                var c = rack.GetComp<CompAssignableToPawn_ArmorRacks>();
-                c.TryUnassignPawn(pawn);
-            }
             assignedPawns.Add(pawn);
             this.SortAssignedPawns();
         }
 
         public override bool AssignedAnything(Pawn pawn)
         {
-            var racks = pawn.Map.listerBuildings.AllBuildingsColonistOfClass<ArmorRack>();
-            foreach (var rack in racks)
-            {
-                var c = rack.GetComp<CompAssignableToPawn_ArmorRacks>();
-                if (c.AssignedPawns.Contains(pawn))
-                {
-                    return true;
-                }
-            }
             return false;
         }
     }

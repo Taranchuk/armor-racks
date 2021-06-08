@@ -23,7 +23,7 @@ namespace ArmorRacks.ITabs
             this.tutorTag = "ArmorRack";
         }
 
-        protected override void FillTab()
+        public override void FillTab()
         {
             Text.Font = GameFont.Small;
             Rect rect = new Rect(0.0f, 20f, this.size.x, this.size.y - 20f).ContractedBy(10f);
@@ -48,6 +48,12 @@ namespace ArmorRacks.ITabs
             foreach (Apparel apparel in armorRack.GetStoredApparel()
                 .OrderByDescending((ap => ap.def.apparel.bodyPartGroups[0].listOrder)))
                 this.DrawThingRow(ref num, viewRect.width, (Thing) apparel, false);
+            if (HarmonyInit.CELoaded())
+            {
+                Widgets.ListSeparator(ref num, viewRect.width, "ArmorRacks_Ammo".Translate());
+                foreach (Thing ammo in armorRack.GetStoredAmmos())
+                    this.DrawThingRow(ref num, viewRect.width, ammo, false);
+            }
 
             Widgets.EndScrollView();
             GUI.EndGroup();

@@ -41,7 +41,7 @@ namespace ArmorRacks.Jobs
             return base.TryMakePreToilReservations(errorOnFailed);
         }
 
-        protected override IEnumerable<Toil> MakeNewToils()
+        public override IEnumerable<Toil> MakeNewToils()
         {
             foreach (var toil in base.MakeNewToils())
             {
@@ -55,6 +55,9 @@ namespace ArmorRacks.Jobs
                     var storedRackApparel = new List<Apparel>(armorRack.GetStoredApparel());
                     var storedRackWeapon = armorRack.GetStoredWeapon();
                     var storedPawnWeapon = pawn.equipment.Primary;
+                    var storedPawnAmmos = HarmonyInit.CELoaded() ? pawn.inventory.innerContainer.Where(x => x.IsAmmo()).ToList() : null;
+                    var storedRackAmmos = HarmonyInit.CELoaded() ? armorRack.GetStoredAmmos().ToList() : null;
+
                     armorRack.InnerContainer.Clear();
                     
                     foreach (Apparel rackApparel in storedRackApparel)
@@ -105,6 +108,25 @@ namespace ArmorRacks.Jobs
                             break;
                         }
                     }
+
+                    if (storedRackAmmos != null)
+                    {
+                        foreach (var ammo in storedRackAmmos)
+                        {
+                            pawn.inventory.TryAddItemNotForSale(ammo);
+                        }
+                    }
+                    if (storedPawnAmmos != null)
+                    {
+                        foreach (var ammo in storedPawnAmmos)
+                        {
+                            if (armorRack.Accepts(ammo))
+                            {
+                                armorRack.InnerContainer.TryAddOrTransfer(ammo);
+                            }
+                        }
+                    }
+
                     ForbidUtility.SetForbidden(TargetThingA, true);
                     var useComp = pawn.GetComp<ArmorRackUseCommandComp>();
                     if (useComp != null)

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using ArmorRacks.DefOfs;
 using ArmorRacks.ThingComps;
 using ArmorRacks.Things;
@@ -27,7 +28,7 @@ namespace ArmorRacks.Jobs
             return base.TryMakePreToilReservations(errorOnFailed);
         }
         
-        protected override IEnumerable<Toil> MakeNewToils()
+        public override IEnumerable<Toil> MakeNewToils()
         {
             foreach (var toil in base.MakeNewToils())
             {
@@ -40,6 +41,8 @@ namespace ArmorRacks.Jobs
                     var armorRack = TargetThingA as ArmorRack;
                     var storedRackApparel = new List<Apparel>(armorRack.GetStoredApparel());
                     var storedRackWeapon = armorRack.GetStoredWeapon();
+                    var storedPawnAmmos = HarmonyInit.CELoaded() ? pawn.inventory.innerContainer.Where(x => x.IsAmmo()) : null;
+                    var storedRackAmmos = HarmonyInit.CELoaded() ? armorRack.GetStoredAmmos() : null;
                     var storedPawnApparel = new List<Apparel>(pawn.apparel.WornApparel);
                     var storedPawnWeapon = pawn.equipment.Primary;
                     Thing lastResultingThing;
@@ -112,6 +115,25 @@ namespace ArmorRacks.Jobs
                             break;
                         }
                     }
+
+                    if (storedRackAmmos != null)
+                    {
+                        foreach (var ammo in storedRackAmmos)
+                        {
+                            pawn.inventory.TryAddItemNotForSale(ammo);
+                        }
+                    }
+                    if (storedPawnAmmos != null)
+                    {
+                        foreach (var ammo in storedPawnAmmos)
+                        {
+                            if (armorRack.Accepts(ammo))
+                            {
+                                armorRack.InnerContainer.TryAddOrTransfer(ammo);
+                            }
+                        }
+                    }
+
                     ForbidUtility.SetForbidden(TargetThingA, false);
                     var useComp = pawn.GetComp<ArmorRackUseCommandComp>();
                     if (useComp != null)

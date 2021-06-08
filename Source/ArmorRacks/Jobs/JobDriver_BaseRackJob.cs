@@ -16,7 +16,7 @@ namespace ArmorRacks.Jobs
             return pawn.Reserve(TargetThingA, job, errorOnFailed: errorOnFailed);
         }
 
-        protected override IEnumerable<Toil> MakeNewToils()
+        public override IEnumerable<Toil> MakeNewToils()
         {
             yield return Toils_Reserve.Reserve(TargetIndex.A);
             var destination = TargetThingA.def.hasInteractionCell ? PathEndMode.InteractionCell : PathEndMode.Touch;

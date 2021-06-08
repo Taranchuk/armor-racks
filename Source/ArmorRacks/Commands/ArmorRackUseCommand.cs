@@ -23,21 +23,56 @@ namespace ArmorRacks.Commands
             defaultIconColor = armorRack.Stuff.stuffProps.color;
         }
 
+        public override bool GroupsWith(Gizmo other)
+        {
+            return false;
+        }
+
         public override string Label
         {
             get
             {
+                var str = "";
                 var selectedJobDef = Pawn.GetComp<ArmorRackUseCommandComp>().CurArmorRackJobDef;
                 if (selectedJobDef == ArmorRacksJobDefOf.ArmorRacks_JobWearRack)
                 {
-                    return "ArmorRacks_WearRack_FloatMenuLabel".Translate();
+                    str += "ArmorRacks_WearRack_FloatMenuLabel".Translate();
                 }
-
-                return "ArmorRacks_TransferToRack_FloatMenuLabel".Translate();
+                else
+                {
+                    str += "ArmorRacks_TransferToRack_FloatMenuLabel".Translate();
+                }
+                var additionalName = ArmorRack.AdditionalName;
+                if (additionalName.Length > 0)
+                {
+                    return str + " (" + additionalName.Truncate(156) + ")";
+                }
+                return str;
             }
         }
 
-        public override string Desc => Label;
+        public override string Desc
+        {
+            get
+            {
+                var str = "";
+                var selectedJobDef = Pawn.GetComp<ArmorRackUseCommandComp>().CurArmorRackJobDef;
+                if (selectedJobDef == ArmorRacksJobDefOf.ArmorRacks_JobWearRack)
+                {
+                    str += "ArmorRacks_WearRack_FloatMenuLabel".Translate();
+                }
+                else
+                {
+                    str += "ArmorRacks_TransferToRack_FloatMenuLabel".Translate();
+                }
+                var additionalName = ArmorRack.AdditionalName;
+                if (additionalName.Length > 0)
+                {
+                    return str + " (" + additionalName + ")";
+                }
+                return str;
+            }
+        }
 
         public override IEnumerable<FloatMenuOption> RightClickFloatMenuOptions
         {

@@ -52,12 +52,47 @@ namespace ArmorRacks.Things
         public ArmorRackContentsDrawer ContentsDrawer;
         private BodyTypeDef _BodyTypeDef;
         private PawnKindDef _PawnKindDef;
-        public bool StorageTabVisible => true;
 
+        public string customName;
+        public bool StorageTabVisible => true;
+        public static HashSet<ArmorRack> armorRacks = new HashSet<ArmorRack>();
+
+        public string AdditionalName
+        {
+            get
+            {
+                if (customName != null)
+                {
+                    return customName;
+                }
+                var things = new List<Thing> { this.GetStoredWeapon() }.Concat<Thing>(this.GetStoredApparel())
+                    .Where(x => x?.def?.label != null).Select(x => x.def.label).ToList();
+                if (things.Any())
+                {
+                    return string.Join(", ", things);
+                }
+                return "";
+            }
+        }
         public ArmorRack()
         {
             InnerContainer = new ArmorRackInnerContainer(this, false);
             ContentsDrawer = new ArmorRackContentsDrawer(this);
+            armorRacks.Add(this);
+        }
+
+        public static IEnumerable<ArmorRack> GetArmorRacks()
+        {
+            var maps = Find.Maps;
+            var world = Find.World;
+            foreach (var armorRack in armorRacks)
+            {
+                if (armorRack.Spawned && maps.Contains(armorRack.Map) && armorRack.Map.Parent != null
+                    && world.worldObjects.Contains(armorRack.Map.Parent))
+                {
+                    yield return armorRack;
+                }
+            }
         }
 
         public BodyTypeDef BodyTypeDef
@@ -128,6 +163,10 @@ namespace ArmorRacks.Things
                 {
                     result = CanStoreApparel((Apparel) t);
                 }
+                else if (t.IsAmmo())
+                {
+                    return true;
+                }
             }
             return result;
         }
@@ -151,8 +190,19 @@ namespace ArmorRacks.Things
                 }
             }
             return null;
-        } 
+        }
 
+        public IEnumerable<Thing> GetStoredAmmos()
+        {
+            var innerList = InnerContainer.InnerListForReading;
+            foreach (Thing storedThing in innerList)
+            {
+                if (storedThing.IsAmmo())
+                {
+                    yield return storedThing;
+                }
+            }
+        }
         public bool CanStoreApparel(Apparel apparel)
         {
             if (ArmorRackJobUtil.RaceCanWear(apparel.def, PawnKindDef.race) == false)
@@ -198,6 +248,7 @@ namespace ArmorRacks.Things
             Scribe_Deep.Look(ref Settings, "ArmorRackSettings", this);
             Scribe_Defs.Look(ref _BodyTypeDef, "_BodyTypeDef");
             Scribe_Defs.Look(ref _PawnKindDef, "_PawnKindDef");
+            Scribe_Values.Look(ref customName, "customName");
         }
 
         public override void Draw()
@@ -233,6 +284,10 @@ namespace ArmorRacks.Things
         {
             foreach (Gizmo g in base.GetGizmos())
             {
+                if (g is Command_Action command && command.Label == "CommandThingSetOwnerLabel".Translate())
+                {
+                    continue;
+                }
                 yield return g;
             }
             yield return new Command_Action
@@ -246,6 +301,19 @@ namespace ArmorRacks.Things
                 },
                 hotKey = KeyBindingDefOf.Misc3
             };
+
+            yield return new Command_Action
+            {
+                action = delegate ()
+                {
+                    Find.WindowStack.Add(new Dialog_SetArmorRacksName(this));
+                },
+                defaultLabel = "ArmorRacks_SetArmorRacksName".Translate(),
+                hotKey = KeyBindingDefOf.Misc3,
+                defaultDesc = "ArmorRacks_SetArmorRacksNameDesc".Translate(),
+                icon = ContentFinder<Texture2D>.Get("UI/Buttons/Rename", false)
+            };
+
             foreach (Gizmo g2 in StorageSettingsClipboard.CopyPasteGizmosFor(Settings))
             {
                 yield return g2;
