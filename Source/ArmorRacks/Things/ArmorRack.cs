@@ -282,9 +282,10 @@ namespace ArmorRacks.Things
 
         public override IEnumerable<Gizmo> GetGizmos()
         {
+            var cachedLabel = "CommandThingSetOwnerLabel".Translate();
             foreach (Gizmo g in base.GetGizmos())
             {
-                if (g is Command_Action command && command.Label == "CommandThingSetOwnerLabel".Translate())
+                if (g is Command_Action command && command.Label == cachedLabel)
                 {
                     continue;
                 }
@@ -292,7 +293,7 @@ namespace ArmorRacks.Things
             }
             yield return new Command_Action
             {
-                defaultLabel = "CommandThingSetOwnerLabel".Translate(),
+                defaultLabel = cachedLabel,
                 icon = ContentFinder<Texture2D>.Get("UI/Commands/AssignOwner", true),
                 defaultDesc = "ArmorRacks_ArmorRackSetOwnerDescription".Translate(),
                 action = delegate()

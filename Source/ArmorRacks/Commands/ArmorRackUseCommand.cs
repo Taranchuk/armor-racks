@@ -28,26 +28,46 @@ namespace ArmorRacks.Commands
             return false;
         }
 
+        public static Dictionary<Pawn, ArmorRackUseCommandComp> cachedComps = new Dictionary<Pawn, ArmorRackUseCommandComp>();
+
+        public string cachedStr = "";
+        public int updateCount = 0;
+
+        public string cachedStrDesc = "";
+        public int updateCountDesc = 0;
         public override string Label
         {
             get
             {
-                var str = "";
-                var selectedJobDef = Pawn.GetComp<ArmorRackUseCommandComp>().CurArmorRackJobDef;
-                if (selectedJobDef == ArmorRacksJobDefOf.ArmorRacks_JobWearRack)
+                if (updateCount <= 0)
                 {
-                    str += "ArmorRacks_WearRack_FloatMenuLabel".Translate();
+                    updateCount = 60;
+                    var str = "";
+                    if (!cachedComps.TryGetValue(Pawn, out var comp))
+                    {
+                        cachedComps[Pawn] = comp = Pawn.GetComp<ArmorRackUseCommandComp>();
+                    }
+                    var selectedJobDef = comp.CurArmorRackJobDef;
+                    if (selectedJobDef == ArmorRacksJobDefOf.ArmorRacks_JobWearRack)
+                    {
+                        str += "ArmorRacks_WearRack_FloatMenuLabel".Translate();
+                    }
+                    else
+                    {
+                        str += "ArmorRacks_TransferToRack_FloatMenuLabel".Translate();
+                    }
+                    var additionalName = ArmorRack.AdditionalName;
+                    if (additionalName.Length > 0)
+                    {
+                        cachedStr = str + " (" + additionalName.Truncate(156) + ")";
+                    }
+                    else
+                    {
+                        cachedStr = str;
+                    }
                 }
-                else
-                {
-                    str += "ArmorRacks_TransferToRack_FloatMenuLabel".Translate();
-                }
-                var additionalName = ArmorRack.AdditionalName;
-                if (additionalName.Length > 0)
-                {
-                    return str + " (" + additionalName.Truncate(156) + ")";
-                }
-                return str;
+                updateCount--;
+                return cachedStr;
             }
         }
 
@@ -55,22 +75,36 @@ namespace ArmorRacks.Commands
         {
             get
             {
-                var str = "";
-                var selectedJobDef = Pawn.GetComp<ArmorRackUseCommandComp>().CurArmorRackJobDef;
-                if (selectedJobDef == ArmorRacksJobDefOf.ArmorRacks_JobWearRack)
+
+                if (updateCountDesc <= 0)
                 {
-                    str += "ArmorRacks_WearRack_FloatMenuLabel".Translate();
+                    updateCountDesc = 60;
+                    var str = "";
+                    if (!cachedComps.TryGetValue(Pawn, out var comp))
+                    {
+                        cachedComps[Pawn] = comp = Pawn.GetComp<ArmorRackUseCommandComp>();
+                    }
+                    var selectedJobDef = comp.CurArmorRackJobDef;
+                    if (selectedJobDef == ArmorRacksJobDefOf.ArmorRacks_JobWearRack)
+                    {
+                        str += "ArmorRacks_WearRack_FloatMenuLabel".Translate();
+                    }
+                    else
+                    {
+                        str += "ArmorRacks_TransferToRack_FloatMenuLabel".Translate();
+                    }
+                    var additionalName = ArmorRack.AdditionalName;
+                    if (additionalName.Length > 0)
+                    {
+                        cachedStrDesc = str + " (" + additionalName + ")";
+                    }
+                    else
+                    {
+                        cachedStrDesc = str;
+                    }
                 }
-                else
-                {
-                    str += "ArmorRacks_TransferToRack_FloatMenuLabel".Translate();
-                }
-                var additionalName = ArmorRack.AdditionalName;
-                if (additionalName.Length > 0)
-                {
-                    return str + " (" + additionalName + ")";
-                }
-                return str;
+                updateCountDesc--;
+                return cachedStrDesc;
             }
         }
 

@@ -38,7 +38,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ArmorRacks - Copy.cs" />
+    <Compile Include="Dialog_SetArmorRacksName.cs" />
     <Compile Include="HarmonyPatches.cs" />
     <Compile Include="ArmorRacks.cs" />
     <Compile Include="Commands\ArmorRackUseCommand.cs" />

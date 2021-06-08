@@ -16,6 +16,7 @@ namespace ArmorRacks.ThingComps
             Scribe_Defs.Look(ref CurArmorRackJobDef, "CurArmorRackJobDef");
         }
 
+        private static Dictionary<ArmorRack, ArmorRackUseCommand> cachedCommands = new Dictionary<ArmorRack, ArmorRackUseCommand>();
         public override IEnumerable<Gizmo> CompGetGizmosExtra()
         {
             if (parent is Pawn pawn)
@@ -26,7 +27,11 @@ namespace ArmorRacks.ThingComps
                     var c = rack.GetComp<CompAssignableToPawn_ArmorRacks>();
                     if (c.AssignedPawns.Contains(pawn))
                     {
-                        yield return new ArmorRackUseCommand(rack, pawn);
+                        if (!cachedCommands.TryGetValue(rack, out var command))
+                        {
+                            cachedCommands[rack] = command = new ArmorRackUseCommand(rack, pawn);
+                        }
+                        yield return command;
                     }
                 }
             }
