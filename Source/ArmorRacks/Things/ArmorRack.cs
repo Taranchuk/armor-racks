@@ -155,7 +155,15 @@ namespace ArmorRacks.Things
             bool result = Settings.AllowedToAccept(t);
             if (result)
             {
-                if (t.def.IsWeapon)
+                if (ModCompatibilityUtils.CELoaded() && t.IsAmmo())
+                {
+                    return true;
+                }
+                else if (ModCompatibilityUtils.ToolsFrameworkLoaded() && t.IsTool())
+                {
+                    return true;
+                }
+                else if (t.def.IsWeapon)
                 {
                     result = CanStoreWeapon(t);
                 }
@@ -163,10 +171,7 @@ namespace ArmorRacks.Things
                 {
                     result = CanStoreApparel((Apparel) t);
                 }
-                else if (t.IsAmmo())
-                {
-                    return true;
-                }
+
             }
             return result;
         }
@@ -175,16 +180,24 @@ namespace ArmorRacks.Things
         {
             if (ArmorRackJobUtil.RaceCanEquip(weapon.def, PawnKindDef.race) == false)
                 return false;
+            if (ModCompatibilityUtils.ToolsFrameworkLoaded() && weapon.IsTool())
+            {
+                return false;
+            }
             Thing storedWeapon = GetStoredWeapon();
             return storedWeapon == null;
         }
 
         public Thing GetStoredWeapon()
         {
-            var innerList = InnerContainer.InnerListForReading;
+            var innerList = InnerContainer.InnerListForReading.ToList();
             foreach (Thing storedThing in innerList)
             {
-                if (storedThing.def.IsWeapon)
+                if (ModCompatibilityUtils.ToolsFrameworkLoaded() && storedThing.def.IsWeapon && !storedThing.IsTool())
+                {
+                    return storedThing;
+                }
+                else if (storedThing.def.IsWeapon)
                 {
                     return storedThing;
                 }
@@ -194,10 +207,22 @@ namespace ArmorRacks.Things
 
         public IEnumerable<Thing> GetStoredAmmos()
         {
-            var innerList = InnerContainer.InnerListForReading;
+            var innerList = InnerContainer.InnerListForReading.ToList();
             foreach (Thing storedThing in innerList)
             {
                 if (storedThing.IsAmmo())
+                {
+                    yield return storedThing;
+                }
+            }
+        }
+
+        public IEnumerable<Thing> GetStoredTools()
+        {
+            var innerList = InnerContainer.InnerListForReading.ToList();
+            foreach (Thing storedThing in innerList)
+            {
+                if (storedThing.IsTool())
                 {
                     yield return storedThing;
                 }
@@ -219,7 +244,7 @@ namespace ArmorRacks.Things
 
         public List<Apparel> GetStoredApparel()
         {
-            var innerList = InnerContainer.InnerListForReading;
+            var innerList = InnerContainer.InnerListForReading.ToList();
             var result = new List<Apparel>();
             foreach (Thing storedThing in innerList)
             {

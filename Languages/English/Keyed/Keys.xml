@@ -16,6 +16,7 @@
     
     <ArmorRacks_EquipSetForcedModSetting_Label>Equip command sets apparel as forced</ArmorRacks_EquipSetForcedModSetting_Label>
 	<ArmorRacks_Ammo>Ammo</ArmorRacks_Ammo>
+	<ArmorRacks_Tools>Tools</ArmorRacks_Tools>
 	<ArmorRacks_SetArmorRacksName>Set name</ArmorRacks_SetArmorRacksName>
 	<ArmorRacks_SetArmorRacksNameDesc>Set name for armor racks</ArmorRacks_SetArmorRacksNameDesc>
 </LanguageData>

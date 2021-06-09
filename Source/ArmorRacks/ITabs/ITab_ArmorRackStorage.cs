@@ -48,10 +48,16 @@ namespace ArmorRacks.ITabs
             foreach (Apparel apparel in armorRack.GetStoredApparel()
                 .OrderByDescending((ap => ap.def.apparel.bodyPartGroups[0].listOrder)))
                 this.DrawThingRow(ref num, viewRect.width, (Thing) apparel, false);
-            if (HarmonyInit.CELoaded())
+            if (ModCompatibilityUtils.CELoaded())
             {
                 Widgets.ListSeparator(ref num, viewRect.width, "ArmorRacks_Ammo".Translate());
                 foreach (Thing ammo in armorRack.GetStoredAmmos())
+                    this.DrawThingRow(ref num, viewRect.width, ammo, false);
+            }
+            if (ModCompatibilityUtils.ToolsFrameworkLoaded())
+            {
+                Widgets.ListSeparator(ref num, viewRect.width, "ArmorRacks_Tools".Translate());
+                foreach (Thing ammo in armorRack.GetStoredTools())
                     this.DrawThingRow(ref num, viewRect.width, ammo, false);
             }
 

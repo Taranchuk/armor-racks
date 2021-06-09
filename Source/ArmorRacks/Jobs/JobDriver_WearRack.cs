@@ -55,9 +55,10 @@ namespace ArmorRacks.Jobs
                     var storedRackApparel = new List<Apparel>(armorRack.GetStoredApparel());
                     var storedRackWeapon = armorRack.GetStoredWeapon();
                     var storedPawnWeapon = pawn.equipment.Primary;
-                    var storedPawnAmmos = HarmonyInit.CELoaded() ? pawn.inventory.innerContainer.Where(x => x.IsAmmo()).ToList() : null;
-                    var storedRackAmmos = HarmonyInit.CELoaded() ? armorRack.GetStoredAmmos().ToList() : null;
-
+                    var storedPawnAmmos = ModCompatibilityUtils.CELoaded() ? pawn.inventory.innerContainer.Where(x => x.IsAmmo()).ToList() : null;
+                    var storedRackAmmos = ModCompatibilityUtils.CELoaded() ? armorRack.GetStoredAmmos().ToList() : null;
+                    var storedPawnTools = ModCompatibilityUtils.ToolsFrameworkLoaded() ? pawn.inventory.innerContainer.Where(x => x.IsTool()).ToList() : null;
+                    var storedRackTools = ModCompatibilityUtils.ToolsFrameworkLoaded() ? armorRack.GetStoredTools().ToList() : null;
                     armorRack.InnerContainer.Clear();
                     
                     foreach (Apparel rackApparel in storedRackApparel)
@@ -127,7 +128,27 @@ namespace ArmorRacks.Jobs
                         }
                     }
 
-                    ForbidUtility.SetForbidden(TargetThingA, true);
+                    if (storedRackTools != null && storedRackTools.Any())
+                    {
+                        foreach (var tool in storedRackTools)
+                        {
+                            pawn.inventory.TryAddItemNotForSale(tool);
+                        }
+
+                        if (storedPawnTools != null)
+                        {
+                            foreach (var tool in storedPawnTools)
+                            {
+                                if (armorRack.Accepts(tool))
+                                {
+                                    armorRack.InnerContainer.TryAddOrTransfer(tool);
+                                }
+                            }
+                        }
+                    }
+
+
+
                     var useComp = pawn.GetComp<ArmorRackUseCommandComp>();
                     if (useComp != null)
                     {

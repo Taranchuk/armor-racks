@@ -41,8 +41,10 @@ namespace ArmorRacks.Jobs
                     var armorRack = TargetThingA as ArmorRack;
                     var storedRackApparel = new List<Apparel>(armorRack.GetStoredApparel());
                     var storedRackWeapon = armorRack.GetStoredWeapon();
-                    var storedPawnAmmos = HarmonyInit.CELoaded() ? pawn.inventory.innerContainer.Where(x => x.IsAmmo()) : null;
-                    var storedRackAmmos = HarmonyInit.CELoaded() ? armorRack.GetStoredAmmos() : null;
+                    var storedPawnAmmos = ModCompatibilityUtils.CELoaded() ? pawn.inventory.innerContainer.Where(x => x.IsAmmo()).ToList() : null;
+                    var storedRackAmmos = ModCompatibilityUtils.CELoaded() ? armorRack.GetStoredAmmos().ToList() : null;
+                    var storedPawnTools = ModCompatibilityUtils.ToolsFrameworkLoaded() ? pawn.inventory.innerContainer.Where(x => x.IsTool()).ToList() : null;
+                    var storedRackTools = ModCompatibilityUtils.ToolsFrameworkLoaded() ? armorRack.GetStoredTools().ToList() : null;
                     var storedPawnApparel = new List<Apparel>(pawn.apparel.WornApparel);
                     var storedPawnWeapon = pawn.equipment.Primary;
                     Thing lastResultingThing;
@@ -120,7 +122,7 @@ namespace ArmorRacks.Jobs
                     {
                         foreach (var ammo in storedRackAmmos)
                         {
-                            pawn.inventory.TryAddItemNotForSale(ammo);
+                            pawn.inventory.innerContainer.TryAddOrTransfer(ammo);
                         }
                     }
                     if (storedPawnAmmos != null)
@@ -134,7 +136,24 @@ namespace ArmorRacks.Jobs
                         }
                     }
 
-                    ForbidUtility.SetForbidden(TargetThingA, false);
+                    if (storedPawnTools != null && storedPawnTools.Any())
+                    {
+                        foreach (var tool in storedPawnTools)
+                        {
+                            if (armorRack.Accepts(tool))
+                            {
+                                armorRack.InnerContainer.TryAddOrTransfer(tool);
+                            }
+                        }
+
+                        if (storedRackTools != null)
+                        {
+                            foreach (var tool in storedRackTools)
+                            {
+                                pawn.inventory.innerContainer.TryAddOrTransfer(tool);
+                            }
+                        }
+                    }
                     var useComp = pawn.GetComp<ArmorRackUseCommandComp>();
                     if (useComp != null)
                     {

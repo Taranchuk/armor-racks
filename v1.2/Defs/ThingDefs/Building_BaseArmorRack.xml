@@ -25,6 +25,7 @@
                     <categories>
                         <li>Apparel</li>
                         <li>Weapons</li>
+						<li MayRequire="Lecris.ToolsFramework">Tools</li>
                     </categories>
                 </filter>
             </fixedStorageSettings>
