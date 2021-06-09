@@ -28,6 +28,12 @@ namespace ArmorRacks.Commands
             return false;
         }
 
+        public void Reset()
+        {
+            updateCount = 0;
+            updateCountDesc = 0;
+        }
+
         public static Dictionary<Pawn, ArmorRackUseCommandComp> cachedComps = new Dictionary<Pawn, ArmorRackUseCommandComp>();
 
         public string cachedStr = "";
@@ -47,7 +53,7 @@ namespace ArmorRacks.Commands
                     {
                         cachedComps[Pawn] = comp = Pawn.GetComp<ArmorRackUseCommandComp>();
                     }
-                    var selectedJobDef = comp.CurArmorRackJobDef;
+                    var selectedJobDef = comp.CurArmorRackJobDef(ArmorRack);
                     if (selectedJobDef == ArmorRacksJobDefOf.ArmorRacks_JobWearRack)
                     {
                         str += "ArmorRacks_WearRack_FloatMenuLabel".Translate();
@@ -84,7 +90,7 @@ namespace ArmorRacks.Commands
                     {
                         cachedComps[Pawn] = comp = Pawn.GetComp<ArmorRackUseCommandComp>();
                     }
-                    var selectedJobDef = comp.CurArmorRackJobDef;
+                    var selectedJobDef = comp.CurArmorRackJobDef(ArmorRack);
                     if (selectedJobDef == ArmorRacksJobDefOf.ArmorRacks_JobWearRack)
                     {
                         str += "ArmorRacks_WearRack_FloatMenuLabel".Translate();
@@ -117,14 +123,26 @@ namespace ArmorRacks.Commands
                 yield return new FloatMenuOption("ArmorRacks_WearRack_FloatMenuLabel".Translate(),
                     delegate
                     {
-                        Pawn.GetComp<ArmorRackUseCommandComp>().CurArmorRackJobDef = ArmorRacksJobDefOf.ArmorRacks_JobWearRack;
+                        var comp = Pawn.GetComp<ArmorRackUseCommandComp>();
+                        if (comp.armorRackJobs is null)
+                        {
+                            comp.armorRackJobs = new Dictionary<ArmorRack, JobDef>();
+                        }
+                        comp.armorRackJobs[ArmorRack] = ArmorRacksJobDefOf.ArmorRacks_JobWearRack;
+                        Reset();
                     });
                 
                 // Transfer to
                 yield return new FloatMenuOption("ArmorRacks_TransferToRack_FloatMenuLabel".Translate(),
                     delegate
                     {
-                        Pawn.GetComp<ArmorRackUseCommandComp>().CurArmorRackJobDef = ArmorRacksJobDefOf.ArmorRacks_JobTransferToRack;
+                        var comp = Pawn.GetComp<ArmorRackUseCommandComp>();
+                        if (comp.armorRackJobs is null)
+                        {
+                            comp.armorRackJobs = new Dictionary<ArmorRack, JobDef>();
+                        }
+                        comp.armorRackJobs[ArmorRack] = ArmorRacksJobDefOf.ArmorRacks_JobTransferToRack;
+                        Reset();
                     });
             }
         }
@@ -133,9 +151,10 @@ namespace ArmorRacks.Commands
         {
             base.ProcessInput(ev);
             var target_info = new LocalTargetInfo(ArmorRack);
-            var selectedJobDef = Pawn.GetComp<ArmorRackUseCommandComp>().CurArmorRackJobDef;
+            var selectedJobDef = Pawn.GetComp<ArmorRackUseCommandComp>().CurArmorRackJobDef(ArmorRack);
             var wearRackJob = new Job(selectedJobDef, target_info);
             Pawn.jobs.TryTakeOrderedJob(wearRackJob);
+            Reset();
         }
     }
 }

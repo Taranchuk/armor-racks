@@ -1,4 +1,5 @@
-﻿using ArmorRacks.Things;
+﻿using ArmorRacks.Commands;
+using ArmorRacks.Things;
 using System.Linq;
 using UnityEngine;
 using Verse;
@@ -29,6 +30,13 @@ namespace ArmorRacks
 		public override void SetName(string name)
 		{
 			armorRack.customName = name;
+			foreach (var armorRackCommand in armorRack.GetGizmos())
+            {
+				if (armorRackCommand is ArmorRackUseCommand useCommand)
+                {
+					useCommand.Reset();
+                }
+            }
 		}
 	}
 }

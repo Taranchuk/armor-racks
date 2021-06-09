@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using ArmorRacks.Commands;
 using ArmorRacks.DefOfs;
 using ArmorRacks.ThingComps;
 using ArmorRacks.Things;
@@ -130,25 +131,25 @@ namespace ArmorRacks.Jobs
                         {
                             pawn.inventory.innerContainer.TryAddOrTransfer(tool);
                         }
+                    }
 
-                        if (storedPawnTools != null)
+                    if (storedPawnTools != null)
+                    {
+                        foreach (var tool in storedPawnTools)
                         {
-                            foreach (var tool in storedPawnTools)
+                            if (armorRack.Accepts(tool))
                             {
-                                if (armorRack.Accepts(tool))
-                                {
-                                    armorRack.InnerContainer.TryAddOrTransfer(tool);
-                                }
+                                armorRack.InnerContainer.TryAddOrTransfer(tool);
                             }
                         }
                     }
 
-
-
-                    var useComp = pawn.GetComp<ArmorRackUseCommandComp>();
-                    if (useComp != null)
+                    foreach (var armorRackCommand in armorRack.GetGizmos())
                     {
-                        useComp.CurArmorRackJobDef = ArmorRacksJobDefOf.ArmorRacks_JobTransferToRack;   
+                        if (armorRackCommand is ArmorRackUseCommand useCommand)
+                        {
+                            useCommand.Reset();
+                        }
                     }
                 }
             };

@@ -9,13 +9,27 @@ namespace ArmorRacks.ThingComps
 {
     public class ArmorRackUseCommandComp : ThingComp
     {
-        public JobDef CurArmorRackJobDef = ArmorRacksJobDefOf.ArmorRacks_JobWearRack;
+        public Dictionary<ArmorRack, JobDef> armorRackJobs = new Dictionary<ArmorRack, JobDef>();
+        public JobDef CurArmorRackJobDef(ArmorRack armorRack)
+        {
+            if (armorRackJobs is null)
+            {
+                armorRackJobs = new Dictionary<ArmorRack, JobDef>();
+            }
+            if (armorRackJobs.TryGetValue(armorRack, out var job))
+            {
+                return job;
+            }
+            return ArmorRacksJobDefOf.ArmorRacks_JobTransferToRack;
+        }
         public override void PostExposeData()
         {
             base.PostExposeData();
-            Scribe_Defs.Look(ref CurArmorRackJobDef, "CurArmorRackJobDef");
+            Scribe_Collections.Look(ref armorRackJobs, "armorRackJobs", LookMode.Reference, LookMode.Def, ref armorRacksKeys, ref jobDefsValues);
         }
 
+        private List<ArmorRack> armorRacksKeys;
+        private List<JobDef> jobDefsValues;
         private static Dictionary<ArmorRack, ArmorRackUseCommand> cachedCommands = new Dictionary<ArmorRack, ArmorRackUseCommand>();
         public override IEnumerable<Gizmo> CompGetGizmosExtra()
         {
