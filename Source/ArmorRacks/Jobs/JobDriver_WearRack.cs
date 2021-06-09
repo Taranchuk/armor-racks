@@ -54,6 +54,7 @@ namespace ArmorRacks.Jobs
                 {
                     var armorRack = TargetThingA as ArmorRack;
                     var storedRackApparel = new List<Apparel>(armorRack.GetStoredApparel());
+                    var storedPawnApparel = new List<Apparel>(pawn.apparel.WornApparel);
                     var storedRackWeapon = armorRack.GetStoredWeapon();
                     var storedPawnWeapon = pawn.equipment.Primary;
                     var storedPawnAmmos = ModCompatibilityUtils.CELoaded() ? pawn.inventory.innerContainer.Where(x => x.IsAmmo()).ToList() : null;
@@ -62,7 +63,43 @@ namespace ArmorRacks.Jobs
                     var storedRackTools = ModCompatibilityUtils.ToolsFrameworkLoaded() ? armorRack.GetStoredTools().ToList() : null;
                     armorRack.InnerContainer.Clear();
 
-                    var storedPawnApparel = new List<Apparel>(pawn.apparel.WornApparel);
+                    
+                    int hasRackWeapon = storedRackWeapon == null ? 0x00 : 0x01;
+                    int hasPawnWeapon = storedPawnWeapon == null ? 0x00 : 0x10;
+                    switch (hasRackWeapon | hasPawnWeapon)
+                    {
+                        case 0x11:
+                        {
+                            pawn.equipment.Remove(storedPawnWeapon);
+                            armorRack.InnerContainer.TryAdd(storedPawnWeapon);
+                            if (ModCompatibilityUtils.CELoaded() && !pawn.CanAcceptNewThing(storedRackWeapon))
+                            {
+                                break;
+                            }
+                            else
+                            {
+                                pawn.equipment.MakeRoomFor((ThingWithComps)storedRackWeapon);
+                                pawn.equipment.AddEquipment((ThingWithComps)storedRackWeapon);
+                            }
+                            break;
+                        }
+                        case 0x01:
+                            if (ModCompatibilityUtils.CELoaded() && !pawn.CanAcceptNewThing(storedRackWeapon))
+                            {
+                                break;
+                            }
+                            else
+                            {
+                                pawn.equipment.MakeRoomFor((ThingWithComps)storedRackWeapon);
+                                pawn.equipment.AddEquipment((ThingWithComps)storedRackWeapon);
+                            }
+                            break;
+                        case 0x10:
+                        {
+                            break;
+                        }
+                    }
+
                     foreach (var pawnApparel in storedPawnApparel)
                     {
                         pawn.apparel.Remove(pawnApparel);
@@ -77,33 +114,14 @@ namespace ArmorRacks.Jobs
                             GenPlace.TryPlaceThing(rackApparel, armorRack.Position, armorRack.Map, ThingPlaceMode.Near, out lastRemovedThing);
                             continue;
                         }
-
+                        if (ModCompatibilityUtils.CELoaded() && !pawn.CanAcceptNewThing(rackApparel))
+                        {
+                            continue;
+                        }
                         pawn.apparel.Wear(rackApparel);
                         if (EquipSetForced())
                         {
                             pawn.outfits.forcedHandler.SetForced(rackApparel, true);
-                        }
-                    }
-                    
-                    int hasRackWeapon = storedRackWeapon == null ? 0x00 : 0x01;
-                    int hasPawnWeapon = storedPawnWeapon == null ? 0x00 : 0x10;
-                    switch (hasRackWeapon | hasPawnWeapon)
-                    {
-                        case 0x11:
-                        {
-                            pawn.equipment.Remove(storedPawnWeapon);
-                            armorRack.InnerContainer.TryAdd(storedPawnWeapon);
-                            pawn.equipment.MakeRoomFor((ThingWithComps)storedRackWeapon);
-                            pawn.equipment.AddEquipment((ThingWithComps)storedRackWeapon);
-                            break;
-                        }
-                        case 0x01:
-                            pawn.equipment.MakeRoomFor((ThingWithComps)storedRackWeapon);
-                            pawn.equipment.AddEquipment((ThingWithComps)storedRackWeapon);
-                            break;
-                        case 0x10:
-                        {
-                            break;
                         }
                     }
 
@@ -111,6 +129,10 @@ namespace ArmorRacks.Jobs
                     {
                         foreach (var ammo in storedRackAmmos)
                         {
+                            if (ModCompatibilityUtils.CELoaded() && !pawn.CanAcceptNewThing(ammo))
+                            {
+                                continue;
+                            }
                             pawn.inventory.innerContainer.TryAddOrTransfer(ammo);
                         }
                     }
@@ -129,6 +151,10 @@ namespace ArmorRacks.Jobs
                     {
                         foreach (var tool in storedRackTools)
                         {
+                            if (ModCompatibilityUtils.CELoaded() && !pawn.CanAcceptNewThing(tool))
+                            {
+                                continue;
+                            }
                             pawn.inventory.innerContainer.TryAddOrTransfer(tool);
                         }
                     }
