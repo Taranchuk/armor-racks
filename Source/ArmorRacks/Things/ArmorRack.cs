@@ -148,6 +148,11 @@ namespace ArmorRacks.Things
             if (def.building.defaultStorageSettings == null)
                 return;
             Settings.CopyFrom(def.building.defaultStorageSettings);
+            if (GetParentStoreSettings() != null)
+            {
+                var parentFilter = GetParentStoreSettings().filter;
+                Settings.filter.SetAllowAll(parentFilter);
+            }
         }
 
         public bool Accepts(Thing t)

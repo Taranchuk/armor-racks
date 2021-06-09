@@ -60,7 +60,14 @@ namespace ArmorRacks.Jobs
                     var storedPawnTools = ModCompatibilityUtils.ToolsFrameworkLoaded() ? pawn.inventory.innerContainer.Where(x => x.IsTool()).ToList() : null;
                     var storedRackTools = ModCompatibilityUtils.ToolsFrameworkLoaded() ? armorRack.GetStoredTools().ToList() : null;
                     armorRack.InnerContainer.Clear();
-                    
+
+                    var storedPawnApparel = new List<Apparel>(pawn.apparel.WornApparel);
+                    foreach (var pawnApparel in storedPawnApparel)
+                    {
+                        pawn.apparel.Remove(pawnApparel);
+                        armorRack.InnerContainer.TryAdd(pawnApparel);
+                    }
+
                     foreach (Apparel rackApparel in storedRackApparel)
                     {
                         if (!ApparelUtility.HasPartsToWear(pawn, rackApparel.def))
@@ -69,18 +76,7 @@ namespace ArmorRacks.Jobs
                             GenPlace.TryPlaceThing(rackApparel, armorRack.Position, armorRack.Map, ThingPlaceMode.Near, out lastRemovedThing);
                             continue;
                         }
-                        if (!pawn.apparel.CanWearWithoutDroppingAnything(rackApparel.def))
-                        {
-                            var storedPawnApparel = new List<Apparel>(pawn.apparel.WornApparel);
-                            foreach (var pawnApparel in storedPawnApparel)
-                            {
-                                if (!ApparelUtility.CanWearTogether(rackApparel.def, pawnApparel.def, armorRack.PawnKindDef.RaceProps.body))
-                                {
-                                    pawn.apparel.Remove(pawnApparel);
-                                    armorRack.InnerContainer.TryAdd(pawnApparel);
-                                }
-                            }
-                        }
+
                         pawn.apparel.Wear(rackApparel);
                         if (EquipSetForced())
                         {
@@ -114,7 +110,7 @@ namespace ArmorRacks.Jobs
                     {
                         foreach (var ammo in storedRackAmmos)
                         {
-                            pawn.inventory.TryAddItemNotForSale(ammo);
+                            pawn.inventory.innerContainer.TryAddOrTransfer(ammo);
                         }
                     }
                     if (storedPawnAmmos != null)
@@ -132,7 +128,7 @@ namespace ArmorRacks.Jobs
                     {
                         foreach (var tool in storedRackTools)
                         {
-                            pawn.inventory.TryAddItemNotForSale(tool);
+                            pawn.inventory.innerContainer.TryAddOrTransfer(tool);
                         }
 
                         if (storedPawnTools != null)
