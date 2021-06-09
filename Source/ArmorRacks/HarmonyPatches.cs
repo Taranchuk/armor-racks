@@ -5,6 +5,7 @@ using HarmonyLib;
 using RimWorld;
 using System;
 using System.Linq;
+using System.Reflection;
 using UnityEngine;
 using Verse;
 using Verse.AI;
@@ -12,11 +13,13 @@ using Verse.AI;
 namespace ArmorRacks
 {
 	[StaticConstructorOnStartup]
-	internal static class ModCompatibilityUtils
+	internal static class ModCompatibility
 	{
-		public static Type ammoThingType;
-		public static Type toolThingType;
-		public static Type compInventoryType;
+		private static Type ammoThingType;
+		private static Type toolThingType;
+		private static Type compInventoryType;
+		private static MethodBase tryGetOffHandEquipment;
+		private static MethodBase addOffHandEquipment;
 		public static bool CELoaded()
         {
 			return ammoThingType != null;
@@ -25,7 +28,29 @@ namespace ArmorRacks
         {
 			return toolThingType != null;
         }
+		public static bool DualWieldLoaded()
+		{
+			return tryGetOffHandEquipment != null;
+		}
 
+		public static bool TryGetAnotherDualWeapon(Pawn pawn, out ThingWithComps thingWithComps)
+		{
+			object[] array = new object[2];
+			array[0] = pawn.equipment;
+			object[] array2 = array;
+			bool flag2 = (bool)tryGetOffHandEquipment.Invoke(null, array2);
+			thingWithComps = (ThingWithComps)array2[1];
+			return flag2;
+		}
+
+		public static void AddOffHandEquipment(this Pawn pawn, ThingWithComps thingWithComps)
+		{
+			addOffHandEquipment.Invoke(null, new object[]
+			{
+				pawn.equipment,
+				thingWithComps
+			});
+		}
 		public static bool IsAmmo(this Thing thing)
         {
 			return ammoThingType.IsAssignableFrom(thing.GetType());
@@ -75,13 +100,15 @@ namespace ArmorRacks
 			}
 			return 0f;
 		}
-		static ModCompatibilityUtils()
+		static ModCompatibility()
 		{
 			Harmony harmony = new Harmony("ArmorRacks.HarmonyPatches");
 			harmony.PatchAll();
 			ammoThingType = AccessTools.TypeByName("CombatExtended.AmmoThing");
 			compInventoryType = AccessTools.TypeByName("CombatExtended.CompInventory");
 			toolThingType = AccessTools.TypeByName("ToolsFramework.Tool");
+			tryGetOffHandEquipment = AccessTools.Method(GenTypes.GetTypeInAnyAssembly("DualWield.Ext_Pawn_EquipmentTracker", "DualWield"), "TryGetOffHandEquipment", null, null);
+			addOffHandEquipment = AccessTools.Method("DualWield.Ext_Pawn_EquipmentTracker:AddOffHandEquipment", null, null);
 		}
 	}
 

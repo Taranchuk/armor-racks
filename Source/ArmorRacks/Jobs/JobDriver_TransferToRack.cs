@@ -41,18 +41,26 @@ namespace ArmorRacks.Jobs
                 {
                     var armorRack = TargetThingA as ArmorRack;
                     var storedRackApparel = new List<Apparel>(armorRack.GetStoredApparel());
-                    var storedRackWeapon = armorRack.GetStoredWeapon();
-                    var storedPawnAmmos = ModCompatibilityUtils.CELoaded() ? pawn.inventory.innerContainer.Where(x => x.IsAmmo()).ToList() : null;
-                    var storedRackAmmos = ModCompatibilityUtils.CELoaded() ? armorRack.GetStoredAmmos().ToList() : null;
-                    var storedPawnTools = ModCompatibilityUtils.ToolsFrameworkLoaded() ? pawn.inventory.innerContainer.Where(x => x.IsTool()).ToList() : null;
-                    var storedRackTools = ModCompatibilityUtils.ToolsFrameworkLoaded() ? armorRack.GetStoredTools().ToList() : null;
                     var storedPawnApparel = new List<Apparel>(pawn.apparel.WornApparel);
+                    
+                    var storedRackWeapon = armorRack.GetStoredWeapon();
                     var storedPawnWeapon = pawn.equipment.Primary;
+
+                    var storedRackOffhandWeapon = ModCompatibility.DualWieldLoaded() ? armorRack.GetStoredOffhandWeapon() : null;
+                    var storedPawnOffhandWeapon = ModCompatibility.DualWieldLoaded() ? ModCompatibility.TryGetAnotherDualWeapon(pawn, out var offHandWeapon) ? offHandWeapon : null : null;
+
+                    var storedPawnAmmos = ModCompatibility.CELoaded() ? pawn.inventory.innerContainer.Where(x => x.IsAmmo()).ToList() : null;
+                    var storedRackAmmos = ModCompatibility.CELoaded() ? armorRack.GetStoredAmmos().ToList() : null;
+                    
+                    var storedPawnTools = ModCompatibility.ToolsFrameworkLoaded() ? pawn.inventory.innerContainer.Where(x => x.IsTool()).ToList() : null;
+                    var storedRackTools = ModCompatibility.ToolsFrameworkLoaded() ? armorRack.GetStoredTools().ToList() : null;
+                    
                     Thing lastResultingThing;
                     
                     armorRack.InnerContainer.Clear();
                     foreach (var pawnApparel in storedPawnApparel)
                     {
+                        Log.Message("pawnApparel: " + pawnApparel);
                         if (armorRack.Accepts(pawnApparel))
                         {
                             pawn.apparel.Remove(pawnApparel);
@@ -72,18 +80,10 @@ namespace ArmorRacks.Jobs
                             leftoverRackApparel.Add(rackApparel);
                         }
                     }
-
+                    
                     foreach (Apparel leftoverApparel in leftoverRackApparel)
                     {
-                        if (ApparelUtility.HasPartsToWear(pawn, leftoverApparel.def) && pawn.apparel.CanWearWithoutDroppingAnything(leftoverApparel.def))
-                        {
-                            pawn.apparel.Wear(leftoverApparel);
-                        }
-                        else
-                        {
-                            GenDrop.TryDropSpawn(leftoverApparel, armorRack.Position, armorRack.Map,
-                                ThingPlaceMode.Near, out lastResultingThing);
-                        }
+                        GenDrop.TryDropSpawn(leftoverApparel, armorRack.Position, armorRack.Map, ThingPlaceMode.Near, out lastResultingThing);
                     }
                     
                     int hasRackWeapon = storedRackWeapon == null ? 0x00 : 0x01;
@@ -116,6 +116,24 @@ namespace ArmorRacks.Jobs
                                 armorRack.InnerContainer.TryAdd(storedPawnWeapon);
                             }
                             break;
+                        }
+                    }
+
+                    Log.Message("storedRackOffhandWeapon: " + storedRackOffhandWeapon);
+                    if (storedPawnOffhandWeapon != null)
+                    {
+                        armorRack.InnerContainer.TryAddOffHandWeapon(storedPawnOffhandWeapon);
+                        if (storedRackOffhandWeapon != null)
+                        {
+                            if (ModCompatibility.CELoaded() && !pawn.CanAcceptNewThing(storedRackOffhandWeapon))
+                            {
+                                GenPlace.TryPlaceThing(storedRackOffhandWeapon, armorRack.Position, armorRack.Map, ThingPlaceMode.Near, out Thing lastRemovedThing);
+                                Log.Message("Ce loaded, pawn can't accept " + lastRemovedThing);
+                            }
+                            else
+                            {
+                                ModCompatibility.AddOffHandEquipment(pawn, storedRackOffhandWeapon as ThingWithComps);
+                            }
                         }
                     }
 

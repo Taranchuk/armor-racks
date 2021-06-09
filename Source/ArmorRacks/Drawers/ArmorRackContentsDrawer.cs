@@ -97,7 +97,6 @@ namespace ArmorRacks.Drawers
             {
                 return;
             }
-
             Vector3 weaponDrawLoc = drawLoc;
             Mesh weaponMesh;
             float angle = -90f;

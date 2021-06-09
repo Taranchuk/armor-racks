@@ -43,18 +43,25 @@ namespace ArmorRacks.ITabs
             {
                 this.DrawThingRow(ref num, viewRect.width, storedWeapon, false);
             }
-
+            if (ModCompatibility.DualWieldLoaded())
+            {
+                var storedOffhandWeapon = armorRack.GetStoredOffhandWeapon();
+                if (storedOffhandWeapon != null)
+                {
+                    this.DrawThingRow(ref num, viewRect.width, storedOffhandWeapon, false);
+                }
+            }
             Widgets.ListSeparator(ref num, viewRect.width, "Apparel".Translate());
             foreach (Apparel apparel in armorRack.GetStoredApparel()
                 .OrderByDescending((ap => ap.def.apparel.bodyPartGroups[0].listOrder)))
                 this.DrawThingRow(ref num, viewRect.width, (Thing) apparel, false);
-            if (ModCompatibilityUtils.CELoaded())
+            if (ModCompatibility.CELoaded())
             {
                 Widgets.ListSeparator(ref num, viewRect.width, "ArmorRacks_Ammo".Translate());
                 foreach (Thing ammo in armorRack.GetStoredAmmos())
                     this.DrawThingRow(ref num, viewRect.width, ammo, false);
             }
-            if (ModCompatibilityUtils.ToolsFrameworkLoaded())
+            if (ModCompatibility.ToolsFrameworkLoaded())
             {
                 Widgets.ListSeparator(ref num, viewRect.width, "ArmorRacks_Tools".Translate());
                 foreach (Thing ammo in armorRack.GetStoredTools())

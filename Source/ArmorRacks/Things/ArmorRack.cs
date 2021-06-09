@@ -28,6 +28,21 @@ namespace ArmorRacks.Things
         {
         }
 
+        public Thing offHandWeapon;
+        public bool TryAddOffHandWeapon(Thing item, bool canMergeWithExistingStacks = true)
+        {
+            if (item.holdingOwner != null)
+            {
+                item.holdingOwner.Remove(item);
+            }
+            var result = TryAdd(item, canMergeWithExistingStacks);
+            if (result)
+            {
+                offHandWeapon = item;
+            }
+            return result;
+        }
+
         public override bool TryAdd(Thing item, bool canMergeWithExistingStacks = true)
         {
             var result = base.TryAdd(item, canMergeWithExistingStacks);
@@ -42,6 +57,12 @@ namespace ArmorRacks.Things
             var armorRack = owner as ArmorRack;
             armorRack.ContentsChanged(item);
             return result;
+        }
+
+        public override void ExposeData()
+        {
+            base.ExposeData();
+            Scribe_References.Look(ref offHandWeapon, "offHandWeapon");
         }
     }
     
@@ -155,16 +176,30 @@ namespace ArmorRacks.Things
             }
         }
 
+
+        public bool Accepts(Thing t, bool isOffhandWeapon = false)
+        {
+            if (isOffhandWeapon)
+            {
+                bool result = Settings.AllowedToAccept(t);
+                if (result)
+                {
+                    result = InnerContainer.offHandWeapon == null;
+                }
+                return result;
+            }
+            return Accepts(t);
+        }
         public bool Accepts(Thing t)
         {
             bool result = Settings.AllowedToAccept(t);
             if (result)
             {
-                if (ModCompatibilityUtils.CELoaded() && t.IsAmmo())
+                if (ModCompatibility.CELoaded() && t.IsAmmo())
                 {
                     return true;
                 }
-                else if (ModCompatibilityUtils.ToolsFrameworkLoaded() && t.IsTool())
+                else if (ModCompatibility.ToolsFrameworkLoaded() && t.IsTool())
                 {
                     return true;
                 }
@@ -174,18 +209,16 @@ namespace ArmorRacks.Things
                 }
                 else if (t.def.IsApparel)
                 {
-                    result = CanStoreApparel((Apparel) t);
+                    result = CanStoreApparel((Apparel)t);
                 }
-
             }
             return result;
         }
-
         public bool CanStoreWeapon(Thing weapon)
         {
             if (ArmorRackJobUtil.RaceCanEquip(weapon.def, PawnKindDef.race) == false)
                 return false;
-            if (ModCompatibilityUtils.ToolsFrameworkLoaded() && weapon.IsTool())
+            if (ModCompatibility.ToolsFrameworkLoaded() && weapon.IsTool())
             {
                 return false;
             }
@@ -198,18 +231,25 @@ namespace ArmorRacks.Things
             var innerList = InnerContainer.InnerListForReading.ToList();
             foreach (Thing storedThing in innerList)
             {
-                if (ModCompatibilityUtils.ToolsFrameworkLoaded() && storedThing.def.IsWeapon && !storedThing.IsTool())
+                if (storedThing != InnerContainer.offHandWeapon)
                 {
-                    return storedThing;
-                }
-                else if (storedThing.def.IsWeapon)
-                {
-                    return storedThing;
+                    if (ModCompatibility.ToolsFrameworkLoaded() && storedThing.def.IsWeapon && !storedThing.IsTool())
+                    {
+                        return storedThing;
+                    }
+                    else if (storedThing.def.IsWeapon)
+                    {
+                        return storedThing;
+                    }
                 }
             }
             return null;
         }
 
+        public Thing GetStoredOffhandWeapon()
+        {
+            return InnerContainer.offHandWeapon;
+        }
         public IEnumerable<Thing> GetStoredAmmos()
         {
             var innerList = InnerContainer.InnerListForReading.ToList();

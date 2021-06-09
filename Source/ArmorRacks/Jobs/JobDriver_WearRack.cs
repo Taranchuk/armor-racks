@@ -55,12 +55,17 @@ namespace ArmorRacks.Jobs
                     var armorRack = TargetThingA as ArmorRack;
                     var storedRackApparel = new List<Apparel>(armorRack.GetStoredApparel());
                     var storedPawnApparel = new List<Apparel>(pawn.apparel.WornApparel);
+
                     var storedRackWeapon = armorRack.GetStoredWeapon();
+                    var storedRackOffhandWeapon = ModCompatibility.DualWieldLoaded() ? armorRack.GetStoredOffhandWeapon() : null;
                     var storedPawnWeapon = pawn.equipment.Primary;
-                    var storedPawnAmmos = ModCompatibilityUtils.CELoaded() ? pawn.inventory.innerContainer.Where(x => x.IsAmmo()).ToList() : null;
-                    var storedRackAmmos = ModCompatibilityUtils.CELoaded() ? armorRack.GetStoredAmmos().ToList() : null;
-                    var storedPawnTools = ModCompatibilityUtils.ToolsFrameworkLoaded() ? pawn.inventory.innerContainer.Where(x => x.IsTool()).ToList() : null;
-                    var storedRackTools = ModCompatibilityUtils.ToolsFrameworkLoaded() ? armorRack.GetStoredTools().ToList() : null;
+                    var storedPawnOffhandWeapon = ModCompatibility.DualWieldLoaded() ? ModCompatibility.TryGetAnotherDualWeapon(pawn, out var offHandWeapon) ? offHandWeapon : null : null;
+
+                    var storedPawnAmmos = ModCompatibility.CELoaded() ? pawn.inventory.innerContainer.Where(x => x.IsAmmo()).ToList() : null;
+                    var storedRackAmmos = ModCompatibility.CELoaded() ? armorRack.GetStoredAmmos().ToList() : null;
+
+                    var storedPawnTools = ModCompatibility.ToolsFrameworkLoaded() ? pawn.inventory.innerContainer.Where(x => x.IsTool()).ToList() : null;
+                    var storedRackTools = ModCompatibility.ToolsFrameworkLoaded() ? armorRack.GetStoredTools().ToList() : null;
                     armorRack.InnerContainer.Clear();
 
                     
@@ -72,7 +77,7 @@ namespace ArmorRacks.Jobs
                         {
                             pawn.equipment.Remove(storedPawnWeapon);
                             armorRack.InnerContainer.TryAdd(storedPawnWeapon);
-                            if (ModCompatibilityUtils.CELoaded() && !pawn.CanAcceptNewThing(storedRackWeapon))
+                            if (ModCompatibility.CELoaded() && !pawn.CanAcceptNewThing(storedRackWeapon))
                             {
                                 break;
                             }
@@ -84,7 +89,7 @@ namespace ArmorRacks.Jobs
                             break;
                         }
                         case 0x01:
-                            if (ModCompatibilityUtils.CELoaded() && !pawn.CanAcceptNewThing(storedRackWeapon))
+                            if (ModCompatibility.CELoaded() && !pawn.CanAcceptNewThing(storedRackWeapon))
                             {
                                 break;
                             }
@@ -99,6 +104,31 @@ namespace ArmorRacks.Jobs
                             break;
                         }
                     }
+                    Log.Message("storedRackOffhandWeapon: " + storedRackOffhandWeapon);
+                    if (storedRackOffhandWeapon != null)
+                    {
+                        if (ModCompatibility.CELoaded() && !pawn.CanAcceptNewThing(storedRackOffhandWeapon))
+                        {
+                            Log.Message("Ce loaded, pawn can't accept " + storedRackOffhandWeapon);
+                            // do nothing
+                        }
+                        else
+                        {
+                            ThingWithComps thingWithComps = null;
+                            if (ModCompatibility.TryGetAnotherDualWeapon(pawn, out thingWithComps))
+                            {
+                                Log.Message("Dropping " + thingWithComps);
+                                pawn.equipment.TryDropEquipment(thingWithComps, out thingWithComps, pawn.Position, true);
+                            }
+                            Log.Message("Equipping " + storedRackOffhandWeapon);
+                            ModCompatibility.AddOffHandEquipment(pawn, storedRackOffhandWeapon as ThingWithComps);
+                            if (thingWithComps != null)
+                            {
+                                Log.Message("Adding to rack " + thingWithComps);
+                                armorRack.InnerContainer.TryAddOffHandWeapon(thingWithComps);
+                            }
+                        }
+                    }
 
                     foreach (var pawnApparel in storedPawnApparel)
                     {
@@ -110,12 +140,12 @@ namespace ArmorRacks.Jobs
                     {
                         if (!ApparelUtility.HasPartsToWear(pawn, rackApparel.def))
                         {
-                            Thing lastRemovedThing = null;
-                            GenPlace.TryPlaceThing(rackApparel, armorRack.Position, armorRack.Map, ThingPlaceMode.Near, out lastRemovedThing);
+                            armorRack.InnerContainer.TryAdd(rackApparel);
                             continue;
                         }
-                        if (ModCompatibilityUtils.CELoaded() && !pawn.CanAcceptNewThing(rackApparel))
+                        if (ModCompatibility.CELoaded() && !pawn.CanAcceptNewThing(rackApparel))
                         {
+                            armorRack.InnerContainer.TryAdd(rackApparel);
                             continue;
                         }
                         pawn.apparel.Wear(rackApparel);
@@ -129,8 +159,9 @@ namespace ArmorRacks.Jobs
                     {
                         foreach (var ammo in storedRackAmmos)
                         {
-                            if (ModCompatibilityUtils.CELoaded() && !pawn.CanAcceptNewThing(ammo))
+                            if (ModCompatibility.CELoaded() && !pawn.CanAcceptNewThing(ammo))
                             {
+                                armorRack.InnerContainer.TryAdd(ammo);
                                 continue;
                             }
                             pawn.inventory.innerContainer.TryAddOrTransfer(ammo);
@@ -151,8 +182,9 @@ namespace ArmorRacks.Jobs
                     {
                         foreach (var tool in storedRackTools)
                         {
-                            if (ModCompatibilityUtils.CELoaded() && !pawn.CanAcceptNewThing(tool))
+                            if (ModCompatibility.CELoaded() && !pawn.CanAcceptNewThing(tool))
                             {
+                                armorRack.InnerContainer.TryAdd(tool);
                                 continue;
                             }
                             pawn.inventory.innerContainer.TryAddOrTransfer(tool);
