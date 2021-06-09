@@ -79,6 +79,7 @@ namespace ArmorRacks.Jobs
                             armorRack.InnerContainer.TryAdd(storedPawnWeapon);
                             if (ModCompatibility.CELoaded() && !pawn.CanAcceptNewThing(storedRackWeapon))
                             {
+                                GenDrop.TryDropSpawn(storedRackWeapon, armorRack.Position, armorRack.Map, ThingPlaceMode.Near, out Thing lastResultingThing);
                                 break;
                             }
                             else
@@ -91,6 +92,7 @@ namespace ArmorRacks.Jobs
                         case 0x01:
                             if (ModCompatibility.CELoaded() && !pawn.CanAcceptNewThing(storedRackWeapon))
                             {
+                                armorRack.InnerContainer.TryAdd(storedRackWeapon);
                                 break;
                             }
                             else
@@ -109,6 +111,7 @@ namespace ArmorRacks.Jobs
                     {
                         if (ModCompatibility.CELoaded() && !pawn.CanAcceptNewThing(storedRackOffhandWeapon))
                         {
+                            armorRack.InnerContainer.TryAddOffHandWeapon(storedRackOffhandWeapon);
                             Log.Message("Ce loaded, pawn can't accept " + storedRackOffhandWeapon);
                             // do nothing
                         }
