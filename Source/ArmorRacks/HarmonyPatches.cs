@@ -63,16 +63,18 @@ namespace ArmorRacks
 
 		public static bool CanAcceptNewThing(this Pawn pawn, Thing thing)
         {
-			var takenBulk = thing.def.GetStatValueAbstract(StatDef.Named("Bulk"));
+			var takenBulk = thing.def.IsApparel ? thing.def.GetStatValueAbstract(StatDef.Named("WornBulk")) : thing.def.GetStatValueAbstract(StatDef.Named("Bulk")) * thing.stackCount;
 			var availableBulk = pawn.GetAvailableBulk();
 			if (takenBulk > availableBulk)
 			{
+				Log.Message(pawn + " - " + thing + " 1 is heavy " + takenBulk + " - " + availableBulk);
 				return false;
 			}
-			var takenWeight = thing.def.GetStatValueAbstract(StatDef.Named("Mass"));
+			var takenWeight = thing.def.GetStatValueAbstract(StatDef.Named("Mass")) * thing.stackCount;
 			var availableWeight = pawn.GetAvailableWeight();
 			if (takenWeight > availableWeight)
 			{
+				Log.Message(pawn + " - " + thing + " 2 is heavy " + takenWeight + " - " + availableWeight);
 				return false;
 			}
 			return true;

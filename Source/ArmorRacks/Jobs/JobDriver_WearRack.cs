@@ -68,7 +68,62 @@ namespace ArmorRacks.Jobs
                     var storedRackTools = ModCompatibility.ToolsFrameworkLoaded() ? armorRack.GetStoredTools().ToList() : null;
                     armorRack.InnerContainer.Clear();
 
-                    
+                    if (storedPawnTools != null)
+                    {
+                        foreach (var tool in storedPawnTools)
+                        {
+                            if (armorRack.Accepts(tool))
+                            {
+                                armorRack.InnerContainer.TryAddOrTransfer(tool);
+                            }
+                        }
+                    }
+
+                    foreach (var pawnApparel in storedPawnApparel)
+                    {
+                        pawn.apparel.Remove(pawnApparel);
+                        armorRack.InnerContainer.TryAdd(pawnApparel);
+                    }
+
+                    if (storedPawnAmmos != null)
+                    {
+                        foreach (var ammo in storedPawnAmmos)
+                        {
+                            if (armorRack.Accepts(ammo))
+                            {
+                                armorRack.InnerContainer.TryAddOrTransfer(ammo);
+                            }
+                        }
+                    }
+
+                    if (ModCompatibility.CELoaded())
+                    {
+                        var apparelsToWearFirst = storedRackApparel.Where(
+                            x => x.def.equippedStatOffsets.GetStatOffsetFromList(StatDef.Named("CarryWeight")) > 0 ||
+                            x.def.equippedStatOffsets.GetStatOffsetFromList(StatDef.Named("CarryBulk")) > 0).ToList();
+                        Log.Message("apparelsToWearFirst: " + apparelsToWearFirst.Count());
+                        storedRackApparel.RemoveAll(x => apparelsToWearFirst.Contains(x));
+                        foreach (Apparel rackApparel in apparelsToWearFirst)
+                        {
+                            if (!ApparelUtility.HasPartsToWear(pawn, rackApparel.def))
+                            {
+                                Log.Message("can't wear " + rackApparel);
+                                armorRack.InnerContainer.TryAdd(rackApparel);
+                                continue;
+                            }
+                            if (ModCompatibility.CELoaded() && !pawn.CanAcceptNewThing(rackApparel))
+                            {
+                                Log.Message("can't wear (heavy) " + rackApparel);
+                                armorRack.InnerContainer.TryAdd(rackApparel);
+                                continue;
+                            }
+                            pawn.apparel.Wear(rackApparel);
+                            if (EquipSetForced())
+                            {
+                                pawn.outfits.forcedHandler.SetForced(rackApparel, true);
+                            }
+                        }
+                    }
                     int hasRackWeapon = storedRackWeapon == null ? 0x00 : 0x01;
                     int hasPawnWeapon = storedPawnWeapon == null ? 0x00 : 0x10;
                     switch (hasRackWeapon | hasPawnWeapon)
@@ -133,12 +188,6 @@ namespace ArmorRacks.Jobs
                         }
                     }
 
-                    foreach (var pawnApparel in storedPawnApparel)
-                    {
-                        pawn.apparel.Remove(pawnApparel);
-                        armorRack.InnerContainer.TryAdd(pawnApparel);
-                    }
-
                     foreach (Apparel rackApparel in storedRackApparel)
                     {
                         if (!ApparelUtility.HasPartsToWear(pawn, rackApparel.def))
@@ -170,16 +219,6 @@ namespace ArmorRacks.Jobs
                             pawn.inventory.innerContainer.TryAddOrTransfer(ammo);
                         }
                     }
-                    if (storedPawnAmmos != null)
-                    {
-                        foreach (var ammo in storedPawnAmmos)
-                        {
-                            if (armorRack.Accepts(ammo))
-                            {
-                                armorRack.InnerContainer.TryAddOrTransfer(ammo);
-                            }
-                        }
-                    }
 
                     if (storedRackTools != null && storedRackTools.Any())
                     {
@@ -191,17 +230,6 @@ namespace ArmorRacks.Jobs
                                 continue;
                             }
                             pawn.inventory.innerContainer.TryAddOrTransfer(tool);
-                        }
-                    }
-
-                    if (storedPawnTools != null)
-                    {
-                        foreach (var tool in storedPawnTools)
-                        {
-                            if (armorRack.Accepts(tool))
-                            {
-                                armorRack.InnerContainer.TryAddOrTransfer(tool);
-                            }
                         }
                     }
 
