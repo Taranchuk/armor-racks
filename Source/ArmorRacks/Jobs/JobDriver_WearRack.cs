@@ -68,10 +68,6 @@ namespace ArmorRacks.Jobs
                     var storedRackTools = ModCompatibility.ToolsFrameworkLoaded() ? armorRack.GetStoredTools().ToList() : null;
                     armorRack.InnerContainer.Clear();
 
-                    if (storedPawnOffhandWeapon != null)
-                    {
-                        armorRack.InnerContainer.TryAddOffHandWeapon(storedPawnOffhandWeapon);
-                    }
 
                     if (storedPawnTools != null)
                     {
@@ -84,12 +80,17 @@ namespace ArmorRacks.Jobs
                         }
                     }
 
+                    if (storedPawnOffhandWeapon != null)
+                    {
+                        armorRack.InnerContainer.TryAddOffHandWeapon(storedPawnOffhandWeapon);
+                    }
+
                     foreach (var pawnApparel in storedPawnApparel)
                     {
                         pawn.apparel.Remove(pawnApparel);
                         armorRack.InnerContainer.TryAdd(pawnApparel);
                     }
-
+                    
                     if (storedPawnAmmos != null)
                     {
                         foreach (var ammo in storedPawnAmmos)
@@ -100,7 +101,7 @@ namespace ArmorRacks.Jobs
                             }
                         }
                     }
-
+                    
                     if (ModCompatibility.CELoaded())
                     {
                         var apparelsToWearFirst = storedRackApparel.Where(
@@ -129,9 +130,9 @@ namespace ArmorRacks.Jobs
                             }
                         }
                     }
-
-
-
+                    
+                    
+                    
                     int hasRackWeapon = storedRackWeapon == null ? 0x00 : 0x01;
                     int hasPawnWeapon = storedPawnWeapon == null ? 0x00 : 0x10;
                     switch (hasRackWeapon | hasPawnWeapon)
@@ -189,6 +190,7 @@ namespace ArmorRacks.Jobs
                             }
                             Log.Message("Equipping " + storedRackOffhandWeapon);
                             ModCompatibility.AddOffHandEquipment(pawn, storedRackOffhandWeapon as ThingWithComps);
+                            armorRack.InnerContainer.offHandWeapon = null;
                             if (thingWithComps != null)
                             {
                                 Log.Message("Adding to rack " + thingWithComps);
@@ -196,7 +198,7 @@ namespace ArmorRacks.Jobs
                             }
                         }
                     }
-
+                    
                     foreach (Apparel rackApparel in storedRackApparel)
                     {
                         if (!ApparelUtility.HasPartsToWear(pawn, rackApparel.def))
@@ -215,7 +217,7 @@ namespace ArmorRacks.Jobs
                             pawn.outfits.forcedHandler.SetForced(rackApparel, true);
                         }
                     }
-
+                    
                     if (storedRackAmmos != null)
                     {
                         foreach (var ammo in storedRackAmmos)
@@ -238,7 +240,7 @@ namespace ArmorRacks.Jobs
                             }
                         }
                     }
-
+                    
                     if (storedRackTools != null && storedRackTools.Any())
                     {
                         foreach (var tool in storedRackTools)
@@ -251,7 +253,7 @@ namespace ArmorRacks.Jobs
                             pawn.inventory.innerContainer.TryAddOrTransfer(tool);
                         }
                     }
-
+                    
                     foreach (var armorRackCommand in armorRack.GetGizmos())
                     {
                         if (armorRackCommand is ArmorRackUseCommand useCommand)

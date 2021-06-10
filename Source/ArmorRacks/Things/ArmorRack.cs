@@ -56,6 +56,10 @@ namespace ArmorRacks.Things
             var result = base.Remove(item);
             var armorRack = owner as ArmorRack;
             armorRack.ContentsChanged(item);
+            if (item == offHandWeapon)
+            {
+                offHandWeapon = null;
+            }
             return result;
         }
 
@@ -231,16 +235,13 @@ namespace ArmorRacks.Things
             var innerList = InnerContainer.InnerListForReading.ToList();
             foreach (Thing storedThing in innerList)
             {
-                if (storedThing != GetStoredOffhandWeapon())
+                if (storedThing != GetStoredOffhandWeapon() && storedThing.def.IsWeapon)
                 {
-                    if (ModCompatibility.ToolsFrameworkLoaded() && storedThing.def.IsWeapon && !storedThing.IsTool())
+                    if (ModCompatibility.ToolsFrameworkLoaded() && storedThing.IsTool())
                     {
-                        return storedThing;
+                        continue;
                     }
-                    else if (storedThing.def.IsWeapon)
-                    {
-                        return storedThing;
-                    }
+                    return storedThing;
                 }
             }
             return null;

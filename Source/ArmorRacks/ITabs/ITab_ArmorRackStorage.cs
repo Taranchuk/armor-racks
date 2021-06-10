@@ -41,6 +41,7 @@ namespace ArmorRacks.ITabs
             Thing storedWeapon = armorRack.GetStoredWeapon();
             if (storedWeapon != null)
             {
+                Log.Message("storedWeapon: " + storedWeapon);
                 this.DrawThingRow(ref num, viewRect.width, storedWeapon, false);
             }
             if (ModCompatibility.DualWieldLoaded())
@@ -48,6 +49,7 @@ namespace ArmorRacks.ITabs
                 var storedOffhandWeapon = armorRack.GetStoredOffhandWeapon();
                 if (storedOffhandWeapon != null)
                 {
+                    Log.Message("storedOffhandWeapon: " + storedOffhandWeapon);
                     this.DrawThingRow(ref num, viewRect.width, storedOffhandWeapon, false);
                 }
             }
@@ -96,7 +98,6 @@ namespace ArmorRacks.ITabs
                 armorRack.BodyTypeDef.ToString()
             );
             listingStandard1.End();
-            
             
         }
 
