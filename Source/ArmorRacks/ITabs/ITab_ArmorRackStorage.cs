@@ -13,7 +13,7 @@ namespace ArmorRacks.ITabs
 {
     public class ITabArmorRackContents : ITab
     {
-        private static readonly Vector2 WinSize = new Vector2(300f, 480f);
+        private static readonly Vector2 WinSize = new Vector2(432f, 480f);
         private Vector2 scrollPosition;
 
         public ITabArmorRackContents()
