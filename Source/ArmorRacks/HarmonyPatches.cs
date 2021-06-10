@@ -148,7 +148,7 @@ namespace ArmorRacks
 		private static bool Prefix(Pawn_JobTracker __instance, Pawn ___pawn, Job job, JobTag? tag = 0, bool requestQueueing = false)
 		{
 			if (job.def.defName == "GearUpAndGo")
-            {
+			{
 				var racks = ___pawn.Map.listerBuildings.AllBuildingsColonistOfClass<ArmorRack>();
 				foreach (var rack in racks)
 				{
@@ -162,9 +162,20 @@ namespace ArmorRacks
 						return false;
 					}
 				}
-            }
+			}
 			return true;
 		}
 	}
-
+	[HarmonyPatch(typeof(HaulDestinationManager), "AddHaulDestination")]
+	public class AddHaulDestinationPatch
+	{
+		private static bool Prefix(IHaulDestination haulDestination)
+		{
+			if (haulDestination is ArmorRack)
+			{
+				return false;
+			}
+			return true;
+		}
+	}
 }
