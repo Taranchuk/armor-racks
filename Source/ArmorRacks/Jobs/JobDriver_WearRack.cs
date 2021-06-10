@@ -68,6 +68,11 @@ namespace ArmorRacks.Jobs
                     var storedRackTools = ModCompatibility.ToolsFrameworkLoaded() ? armorRack.GetStoredTools().ToList() : null;
                     armorRack.InnerContainer.Clear();
 
+                    if (storedPawnOffhandWeapon != null)
+                    {
+                        armorRack.InnerContainer.TryAddOffHandWeapon(storedPawnOffhandWeapon);
+                    }
+
                     if (storedPawnTools != null)
                     {
                         foreach (var tool in storedPawnTools)
@@ -124,6 +129,9 @@ namespace ArmorRacks.Jobs
                             }
                         }
                     }
+
+
+
                     int hasRackWeapon = storedRackWeapon == null ? 0x00 : 0x01;
                     int hasPawnWeapon = storedPawnWeapon == null ? 0x00 : 0x10;
                     switch (hasRackWeapon | hasPawnWeapon)
@@ -134,6 +142,7 @@ namespace ArmorRacks.Jobs
                             armorRack.InnerContainer.TryAdd(storedPawnWeapon);
                             if (ModCompatibility.CELoaded() && !pawn.CanAcceptNewThing(storedRackWeapon))
                             {
+                                    Log.Message("Dropping " + storedRackWeapon);
                                 GenDrop.TryDropSpawn(storedRackWeapon, armorRack.Position, armorRack.Map, ThingPlaceMode.Near, out Thing lastResultingThing);
                                 break;
                             }
@@ -211,12 +220,22 @@ namespace ArmorRacks.Jobs
                     {
                         foreach (var ammo in storedRackAmmos)
                         {
-                            if (ModCompatibility.CELoaded() && !pawn.CanAcceptNewThing(ammo))
+                            var availableAmmoCount = pawn.GetAvailableAmmoCountFor(ammo);
+                            if (availableAmmoCount <= 0)
                             {
                                 armorRack.InnerContainer.TryAdd(ammo);
                                 continue;
                             }
-                            pawn.inventory.innerContainer.TryAddOrTransfer(ammo);
+                            else if (availableAmmoCount != ammo.stackCount)
+                            {
+                                var newAmmo = ammo.SplitOff(availableAmmoCount);
+                                armorRack.InnerContainer.TryAdd(ammo);
+                                pawn.inventory.innerContainer.TryAddOrTransfer(newAmmo);
+                            }
+                            else
+                            {
+                                pawn.inventory.innerContainer.TryAddOrTransfer(ammo);
+                            }
                         }
                     }
 

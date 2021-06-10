@@ -184,7 +184,7 @@ namespace ArmorRacks.Things
                 bool result = Settings.AllowedToAccept(t);
                 if (result)
                 {
-                    result = InnerContainer.offHandWeapon == null;
+                    result = GetStoredOffhandWeapon() == null;
                 }
                 return result;
             }
@@ -231,7 +231,7 @@ namespace ArmorRacks.Things
             var innerList = InnerContainer.InnerListForReading.ToList();
             foreach (Thing storedThing in innerList)
             {
-                if (storedThing != InnerContainer.offHandWeapon)
+                if (storedThing != GetStoredOffhandWeapon())
                 {
                     if (ModCompatibility.ToolsFrameworkLoaded() && storedThing.def.IsWeapon && !storedThing.IsTool())
                     {
@@ -248,7 +248,7 @@ namespace ArmorRacks.Things
 
         public Thing GetStoredOffhandWeapon()
         {
-            return InnerContainer.offHandWeapon;
+            return InnerContainer.FirstOrDefault(x => x != null && x == InnerContainer.offHandWeapon);
         }
         public IEnumerable<Thing> GetStoredAmmos()
         {

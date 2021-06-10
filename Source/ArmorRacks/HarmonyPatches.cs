@@ -20,6 +20,7 @@ namespace ArmorRacks
 		private static Type compInventoryType;
 		private static MethodBase tryGetOffHandEquipment;
 		private static MethodBase addOffHandEquipment;
+		private static MethodInfo canFitInInventory;
 		public static bool CELoaded()
         {
 			return ammoThingType != null;
@@ -45,6 +46,10 @@ namespace ArmorRacks
 
 		public static void AddOffHandEquipment(this Pawn pawn, ThingWithComps thingWithComps)
 		{
+			if (thingWithComps.holdingOwner != null)
+            {
+				thingWithComps.holdingOwner.Remove(thingWithComps);
+			}
 			addOffHandEquipment.Invoke(null, new object[]
 			{
 				pawn.equipment,
@@ -63,7 +68,8 @@ namespace ArmorRacks
 
 		public static bool CanAcceptNewThing(this Pawn pawn, Thing thing)
         {
-			var takenBulk = thing.def.IsApparel ? thing.def.GetStatValueAbstract(StatDef.Named("WornBulk")) : thing.def.GetStatValueAbstract(StatDef.Named("Bulk")) * thing.stackCount;
+			var takenBulk = thing.def.IsApparel ? thing.def.GetStatValueAbstract(StatDef.Named("WornBulk")) 
+				: thing.def.GetStatValueAbstract(StatDef.Named("Bulk")) * thing.stackCount;
 			var availableBulk = pawn.GetAvailableBulk();
 			if (takenBulk > availableBulk)
 			{
@@ -78,6 +84,27 @@ namespace ArmorRacks
 				return false;
 			}
 			return true;
+		}
+
+		public static int GetAvailableAmmoCountFor(this Pawn pawn, Thing current)
+		{
+			ThingComp inventory = pawn.AllComps.FirstOrDefault(c => compInventoryType.IsAssignableFrom(c.GetType()));
+			if (inventory == null)
+			{
+				return current.stackCount;
+			}
+			object[] array = new object[]
+			{
+				current,
+				0,
+				false,
+				false
+			};
+			if (!(bool)canFitInInventory.Invoke(inventory, array))
+			{
+				return 0;
+			}
+			return (int)array[1];
 		}
 		public static float GetAvailableBulk(this Pawn pawn)
         {
@@ -108,6 +135,7 @@ namespace ArmorRacks
 			harmony.PatchAll();
 			ammoThingType = AccessTools.TypeByName("CombatExtended.AmmoThing");
 			compInventoryType = AccessTools.TypeByName("CombatExtended.CompInventory");
+			canFitInInventory = AccessTools.Method(compInventoryType, "CanFitInInventory");
 			toolThingType = AccessTools.TypeByName("ToolsFramework.Tool");
 			tryGetOffHandEquipment = AccessTools.Method(GenTypes.GetTypeInAnyAssembly("DualWield.Ext_Pawn_EquipmentTracker", "DualWield"), "TryGetOffHandEquipment", null, null);
 			addOffHandEquipment = AccessTools.Method("DualWield.Ext_Pawn_EquipmentTracker:AddOffHandEquipment", null, null);
