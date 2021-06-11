@@ -120,6 +120,10 @@ namespace ArmorRacks.ThingComps
             {
                 yield return TransferThingOption(armorRack, selPawn, storedWeapon);
             }
+            foreach (var thing in selPawn.inventory.innerContainer.Where(x => x.def.IsWeapon && !x.IsTool()))
+            {
+                yield return TransferThingOption(armorRack, selPawn, storedWeapon);
+            }
             if (ModCompatibility.DualWieldLoaded() && ModCompatibility.TryGetAnotherDualWeapon(selPawn, out var offhandWeapon))
             {
                 if (offhandWeapon != null)

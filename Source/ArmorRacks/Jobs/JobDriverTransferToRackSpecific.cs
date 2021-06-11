@@ -57,7 +57,14 @@ namespace ArmorRacks.Jobs
                     }
                     else if (thing.def.IsWeapon)
                     {
-                        pawn.equipment.Remove(thing as ThingWithComps);
+                        if (pawn.equipment.Primary == thing)
+                        {
+                            pawn.equipment.Remove(thing as ThingWithComps);
+                        }
+                        else
+                        {
+                            pawn.inventory.innerContainer.Remove(thing);
+                        }
                         armorRack.InnerContainer.TryAdd(thing);
                     }
                     else if (thing is Apparel apparel)
