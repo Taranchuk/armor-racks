@@ -6,11 +6,19 @@ using ArmorRacks.DefOfs;
 using ArmorRacks.Things;
 using ArmorRacks.Utils;
 using RimWorld;
+using UnityEngine;
 using Verse;
 using Verse.AI;
 
 namespace ArmorRacks.ThingComps
 {
+    public class FloatMenuPlus : FloatMenu
+    {
+        public FloatMenuPlus(List<FloatMenuOption> options) : base(options)
+        {
+
+        }
+    }
     public class ArmorRackCompProperties : CompProperties
     {
         public float equipDelayFactor;
@@ -53,6 +61,14 @@ namespace ArmorRacks.ThingComps
                     selPawn.jobs.TryTakeOrderedJob(wearRackJob);
                 });
                 yield return FloatMenuUtility.DecoratePrioritizedTask(swapWithOption, selPawn, armorRack, "ReservedBy");
+
+                var swapSpecificOption = new FloatMenuOption("ArmorRacks_TransferSpecific".Translate(), delegate
+                {
+                    var floatMenu = new FloatMenuPlus(TransferSpecificOptions(armorRack, selPawn).ToList());
+                    Log.Message("Adding: " + floatMenu);
+                    Find.WindowStack.Add(floatMenu);
+                });
+                yield return FloatMenuUtility.DecoratePrioritizedTask(swapSpecificOption, selPawn, armorRack, "ReservedBy");
             }
             else
             {
@@ -82,12 +98,112 @@ namespace ArmorRacks.ThingComps
                 {
                     yield return new FloatMenuOption("ArmorRacks_WearRack_FloatMenuLabel_NonViolent".Translate(), null);
                 }
+
+                var equipSpecificFromOption = new FloatMenuOption("ArmorRacks_EquipSpecific".Translate(), delegate
+                {
+                    var floatMenu = new FloatMenuPlus(EquipSpecificOptions(armorRack, selPawn).ToList());
+                    Log.Message("Adding: " + floatMenu);
+                    Find.WindowStack.Add(floatMenu);
+                });
+                yield return FloatMenuUtility.DecoratePrioritizedTask(equipSpecificFromOption, selPawn, armorRack, "ReservedBy");
             }
             else
             {
                 yield return new FloatMenuOption("ArmorRacks_WearRack_FloatMenuLabel_Empty".Translate(), null);
             }
-            
+        }
+
+        public IEnumerable<FloatMenuOption> TransferSpecificOptions(ArmorRack armorRack, Pawn selPawn)
+        {
+            var storedWeapon = selPawn.equipment.Primary;
+            if (storedWeapon != null)
+            {
+                yield return TransferThingOption(armorRack, selPawn, storedWeapon);
+            }
+            if (ModCompatibility.DualWieldLoaded() && ModCompatibility.TryGetAnotherDualWeapon(selPawn, out var offhandWeapon))
+            {
+                if (offhandWeapon != null)
+                {
+                    yield return TransferThingOption(armorRack, selPawn, offhandWeapon);
+                }
+            }
+
+            foreach (var thing in selPawn.apparel.WornApparel)
+            {
+                yield return TransferThingOption(armorRack, selPawn, thing);
+            }
+            if (ModCompatibility.ToolsFrameworkLoaded())
+            {
+                foreach (var thing in selPawn.inventory.innerContainer.Where(x => x.IsTool()))
+                {
+                    yield return TransferThingOption(armorRack, selPawn, thing);
+                }
+            }
+            if (ModCompatibility.CELoaded())
+            {
+                foreach (var thing in selPawn.inventory.innerContainer.Where(x => x.IsAmmo()))
+                {
+                    yield return TransferThingOption(armorRack, selPawn, thing);
+                }
+            }
+        }
+
+        private FloatMenuOption TransferThingOption(ArmorRack armorRack, Pawn selPawn, Thing thing)
+        {
+            var transferToOption = new FloatMenuOption("ArmorRacks_TransferThing".Translate(thing.LabelShort), delegate
+            {
+                var target_info = new LocalTargetInfo(armorRack);
+                var wearRackJob = new Job(ArmorRacksJobDefOf.ArmorRacks_JobTransferToRackSpecific, target_info, thing);
+                selPawn.jobs.TryTakeOrderedJob(wearRackJob);
+            });
+            return FloatMenuUtility.DecoratePrioritizedTask(transferToOption, selPawn, armorRack, "ReservedBy");
+        }
+
+        public IEnumerable<FloatMenuOption> EquipSpecificOptions(ArmorRack armorRack, Pawn selPawn)
+        {
+            var storedWeapon = armorRack.GetStoredWeapon();
+            if (storedWeapon != null)
+            {
+                yield return EquipThingOption(armorRack, selPawn, storedWeapon);
+            }
+            if (ModCompatibility.DualWieldLoaded())
+            {
+                var offhandWeapon = armorRack.GetStoredOffhandWeapon();
+                if (offhandWeapon != null)
+                {
+                    yield return EquipThingOption(armorRack, selPawn, offhandWeapon);
+                }
+            }
+
+            foreach (var thing in armorRack.GetStoredApparel())
+            {
+                yield return EquipThingOption(armorRack, selPawn, thing);
+            }
+            if (ModCompatibility.ToolsFrameworkLoaded())
+            {
+                foreach (var thing in armorRack.GetStoredTools())
+                {
+                    yield return EquipThingOption(armorRack, selPawn, thing);
+                }
+            }
+            if (ModCompatibility.CELoaded())
+            {
+                foreach (var thing in armorRack.GetStoredAmmos())
+                {
+                    yield return EquipThingOption(armorRack, selPawn, thing);
+                }
+            }
+        }
+
+        private FloatMenuOption EquipThingOption(ArmorRack armorRack, Pawn selPawn, Thing thing)
+        {
+            var equipFromOption = new FloatMenuOption("ArmorRacks_EquipThing".Translate(thing.LabelShort), delegate
+            {
+                var target_info = new LocalTargetInfo(armorRack);
+                var wearRackJob = new Job(ArmorRacksJobDefOf.ArmorRacks_JobWearRackSpecific, target_info, thing);
+                selPawn.jobs.TryTakeOrderedJob(wearRackJob);
+            });
+            return FloatMenuUtility.DecoratePrioritizedTask(equipFromOption, selPawn, armorRack, "ReservedBy");
         }
     }
 

@@ -4,6 +4,7 @@ using ArmorRacks.Things;
 using HarmonyLib;
 using RimWorld;
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -58,12 +59,12 @@ namespace ArmorRacks
 		}
 		public static bool IsAmmo(this Thing thing)
         {
-			return ammoThingType.IsAssignableFrom(thing.GetType());
+			return ammoThingType?.IsAssignableFrom(thing.GetType()) ?? false;
         }
 
 		public static bool IsTool(this Thing thing)
         {
-			return toolThingType.IsAssignableFrom(thing.GetType());
+			return toolThingType?.IsAssignableFrom(thing.GetType()) ?? false;
 		}
 
 		public static bool CanAcceptNewThing(this Pawn pawn, Thing thing)
@@ -175,6 +176,23 @@ namespace ArmorRacks
 			{
 				return false;
 			}
+			return true;
+		}
+	}
+
+	[HarmonyPatch(typeof(WindowStack), "TryRemove", new Type[]
+	{
+			typeof(Window),
+			typeof(bool)
+	})]
+	public class TryRemovePatch
+	{
+		private static bool Prefix(Window window, bool doCloseSound = true)
+		{
+			if (window.GetType() == typeof(FloatMenuMap) && Find.WindowStack.WindowOfType<FloatMenuPlus>() != null)
+            {
+				return false;
+            }
 			return true;
 		}
 	}

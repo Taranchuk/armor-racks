@@ -19,4 +19,10 @@
 	<ArmorRacks_Tools>Tools</ArmorRacks_Tools>
 	<ArmorRacks_SetArmorRacksName>Set name</ArmorRacks_SetArmorRacksName>
 	<ArmorRacks_SetArmorRacksNameDesc>Set name for armor racks</ArmorRacks_SetArmorRacksNameDesc>
+	<ArmorRacks_EquipSpecific>Equip specific...</ArmorRacks_EquipSpecific>
+	<ArmorRacks_TransferSpecific>Transfer specific...</ArmorRacks_TransferSpecific>
+	<ArmorRacks_EquipThing>Equip {0}</ArmorRacks_EquipThing>
+	<ArmorRacks_TransferThing>Transfer {0}</ArmorRacks_TransferThing>
+	
+
 </LanguageData>

@@ -45,8 +45,10 @@
     <Compile Include="DefOfs\JobDefOf.cs" />
     <Compile Include="Drawers\MechanizedArmorRackContentsDrawer.cs" />
     <Compile Include="ITabs\ITab_ArmorRackStorage.cs" />
+    <Compile Include="Jobs\JobDriverTransferToRackSpecific.cs" />
     <Compile Include="Jobs\JobDriver_BaseRackJob.cs" />
     <Compile Include="Jobs\JobDriver_TransferToRack.cs" />
+    <Compile Include="Jobs\JobDriverWearRackSpecific.cs" />
     <Compile Include="Jobs\JobDriver_WearRack.cs" />
     <Compile Include="Jobs\JobDriver_WearRackBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
