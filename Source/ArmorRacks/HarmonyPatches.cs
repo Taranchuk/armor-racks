@@ -189,7 +189,7 @@ namespace ArmorRacks
 	{
 		private static bool Prefix(Window window, bool doCloseSound = true)
 		{
-			if (window.GetType() == typeof(FloatMenuMap) && Find.WindowStack.WindowOfType<FloatMenuPlus>() != null)
+			if (window?.GetType() == typeof(FloatMenuMap) && Find.WindowStack?.WindowOfType<FloatMenuPlus>() != null)
             {
 				return false;
             }
