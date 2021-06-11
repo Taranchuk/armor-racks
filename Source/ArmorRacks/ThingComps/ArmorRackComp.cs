@@ -61,14 +61,17 @@ namespace ArmorRacks.ThingComps
                     selPawn.jobs.TryTakeOrderedJob(wearRackJob);
                 });
                 yield return FloatMenuUtility.DecoratePrioritizedTask(swapWithOption, selPawn, armorRack, "ReservedBy");
-
-                var swapSpecificOption = new FloatMenuOption("ArmorRacks_TransferSpecific".Translate(), delegate
+                var options = TransferSpecificOptions(armorRack, selPawn).ToList();
+                if (options.Any())
                 {
-                    var floatMenu = new FloatMenuPlus(TransferSpecificOptions(armorRack, selPawn).ToList());
-                    Log.Message("Adding: " + floatMenu);
-                    Find.WindowStack.Add(floatMenu);
-                });
-                yield return FloatMenuUtility.DecoratePrioritizedTask(swapSpecificOption, selPawn, armorRack, "ReservedBy");
+                    var swapSpecificOption = new FloatMenuOption("ArmorRacks_TransferSpecific".Translate(), delegate
+                    {
+                        var floatMenu = new FloatMenuPlus(options);
+                        Find.WindowStack.Add(floatMenu);
+                    });
+                    yield return FloatMenuUtility.DecoratePrioritizedTask(swapSpecificOption, selPawn, armorRack, "ReservedBy");
+                }
+
             }
             else
             {
@@ -99,13 +102,16 @@ namespace ArmorRacks.ThingComps
                     yield return new FloatMenuOption("ArmorRacks_WearRack_FloatMenuLabel_NonViolent".Translate(), null);
                 }
 
-                var equipSpecificFromOption = new FloatMenuOption("ArmorRacks_EquipSpecific".Translate(), delegate
+                var options = EquipSpecificOptions(armorRack, selPawn).ToList();
+                if (options.Any())
                 {
-                    var floatMenu = new FloatMenuPlus(EquipSpecificOptions(armorRack, selPawn).ToList());
-                    Log.Message("Adding: " + floatMenu);
-                    Find.WindowStack.Add(floatMenu);
-                });
-                yield return FloatMenuUtility.DecoratePrioritizedTask(equipSpecificFromOption, selPawn, armorRack, "ReservedBy");
+                    var equipSpecificFromOption = new FloatMenuOption("ArmorRacks_EquipSpecific".Translate(), delegate
+                    {
+                        var floatMenu = new FloatMenuPlus(options);
+                        Find.WindowStack.Add(floatMenu);
+                    });
+                    yield return FloatMenuUtility.DecoratePrioritizedTask(equipSpecificFromOption, selPawn, armorRack, "ReservedBy");
+                }
             }
             else
             {
@@ -115,39 +121,65 @@ namespace ArmorRacks.ThingComps
 
         public IEnumerable<FloatMenuOption> TransferSpecificOptions(ArmorRack armorRack, Pawn selPawn)
         {
-            var storedWeapon = selPawn.equipment.Primary;
-            if (storedWeapon != null)
+            var thingsToBeTransfered = new List<Thing>();
+            if (armorRack.GetStoredWeapon() is null)
             {
-                yield return TransferThingOption(armorRack, selPawn, storedWeapon);
+                var storedWeapon = selPawn.equipment.Primary;
+                if (storedWeapon != null)
+                {
+                    thingsToBeTransfered.Add(storedWeapon);
+                    yield return TransferThingOption(armorRack, selPawn, storedWeapon);
+                }
+                else
+                {
+                    foreach (var thing in selPawn.inventory.innerContainer.Where(x => x.def.IsWeapon && !x.IsTool()))
+                    {
+                        if (!thingsToBeTransfered.Contains(thing))
+                        {
+                            thingsToBeTransfered.Add(thing);
+                            yield return TransferThingOption(armorRack, selPawn, thing);
+                        }
+                    }
+                }
             }
-            foreach (var thing in selPawn.inventory.innerContainer.Where(x => x.def.IsWeapon && !x.IsTool()))
-            {
-                yield return TransferThingOption(armorRack, selPawn, storedWeapon);
-            }
+
             if (ModCompatibility.DualWieldLoaded() && ModCompatibility.TryGetAnotherDualWeapon(selPawn, out var offhandWeapon))
             {
-                if (offhandWeapon != null)
+                if (offhandWeapon != null && !thingsToBeTransfered.Contains(offhandWeapon) && armorRack.InnerContainer.offHandWeapon is null)
                 {
+                    thingsToBeTransfered.Add(offhandWeapon);
                     yield return TransferThingOption(armorRack, selPawn, offhandWeapon);
                 }
             }
 
             foreach (var thing in selPawn.apparel.WornApparel)
             {
-                yield return TransferThingOption(armorRack, selPawn, thing);
+                if (!thingsToBeTransfered.Contains(thing))
+                {
+                    thingsToBeTransfered.Add(thing);
+                    yield return TransferThingOption(armorRack, selPawn, thing);
+                }
             }
             if (ModCompatibility.ToolsFrameworkLoaded())
             {
                 foreach (var thing in selPawn.inventory.innerContainer.Where(x => x.IsTool()))
                 {
-                    yield return TransferThingOption(armorRack, selPawn, thing);
+                    if (!thingsToBeTransfered.Contains(thing))
+                    {
+                        thingsToBeTransfered.Add(thing);
+                        yield return TransferThingOption(armorRack, selPawn, thing);
+                    }
                 }
             }
             if (ModCompatibility.CELoaded())
             {
                 foreach (var thing in selPawn.inventory.innerContainer.Where(x => x.IsAmmo()))
                 {
-                    yield return TransferThingOption(armorRack, selPawn, thing);
+                    if (!thingsToBeTransfered.Contains(thing))
+                    {
+                        thingsToBeTransfered.Add(thing);
+                        yield return TransferThingOption(armorRack, selPawn, thing);
+                    }
                 }
             }
         }

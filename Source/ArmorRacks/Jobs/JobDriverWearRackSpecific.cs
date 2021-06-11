@@ -98,6 +98,7 @@ namespace ArmorRacks.Jobs
                         }
                         else
                         {
+                            armorRack.InnerContainer.Remove(thing);
                             pawn.apparel.Wear(apparel);
                             if (EquipSetForced())
                             {
