@@ -67,7 +67,20 @@ namespace ArmorRacks.Jobs
                 {
                     var armorRack = TargetThingA as ArmorRack;
                     var thing = TargetThingB as Thing;
-                    if (thing.IsAmmo() || thing.IsTool())
+                    if (thing.IsAmmo())
+                    {
+                        if (this.job.count != thing.stackCount)
+                        {
+                            var newAmmo = thing.SplitOff(this.job.count);
+                            pawn.inventory.TryAddItemNotForSale(newAmmo);
+                        }
+                        else
+                        {
+                            armorRack.InnerContainer.Remove(thing);
+                            pawn.inventory.TryAddItemNotForSale(thing);
+                        }
+                    }
+                    else if (thing.IsTool())
                     {
                         armorRack.InnerContainer.Remove(thing);
                         pawn.inventory.TryAddItemNotForSale(thing);

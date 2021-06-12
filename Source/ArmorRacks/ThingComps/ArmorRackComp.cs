@@ -178,7 +178,7 @@ namespace ArmorRacks.ThingComps
                     if (!thingsToBeTransfered.Contains(thing))
                     {
                         thingsToBeTransfered.Add(thing);
-                        yield return TransferThingOption(armorRack, selPawn, thing);
+                        yield return TransferAmmoOption(armorRack, selPawn, thing);
                     }
                 }
             }
@@ -191,6 +191,23 @@ namespace ArmorRacks.ThingComps
                 var target_info = new LocalTargetInfo(armorRack);
                 var wearRackJob = new Job(ArmorRacksJobDefOf.ArmorRacks_JobTransferToRackSpecific, target_info, thing);
                 selPawn.jobs.TryTakeOrderedJob(wearRackJob);
+            });
+            return FloatMenuUtility.DecoratePrioritizedTask(transferToOption, selPawn, armorRack, "ReservedBy");
+        }
+
+        private FloatMenuOption TransferAmmoOption(ArmorRack armorRack, Pawn selPawn, Thing thing)
+        {
+            var transferToOption = new FloatMenuOption("ArmorRacks_TransferThing".Translate(thing.LabelShort), delegate
+            {
+                int to = thing.stackCount;
+                Dialog_Slider window = new Dialog_Slider("ArmorRacks_TransferCount".Translate(thing.LabelShort, thing), 1, to, delegate (int selectCount)
+                {
+                    var target_info = new LocalTargetInfo(armorRack);
+                    var wearRackJob = new Job(ArmorRacksJobDefOf.ArmorRacks_JobTransferToRackSpecific, target_info, thing);
+                    wearRackJob.count = selectCount;
+                    selPawn.jobs.TryTakeOrderedJob(wearRackJob);
+                }, thing.stackCount);
+                Find.WindowStack.Add(window);
             });
             return FloatMenuUtility.DecoratePrioritizedTask(transferToOption, selPawn, armorRack, "ReservedBy");
         }
@@ -226,7 +243,7 @@ namespace ArmorRacks.ThingComps
             {
                 foreach (var thing in armorRack.GetStoredAmmos())
                 {
-                    yield return EquipThingOption(armorRack, selPawn, thing);
+                    yield return TakeAmmoOption(armorRack, selPawn, thing);
                 }
             }
         }
@@ -240,6 +257,23 @@ namespace ArmorRacks.ThingComps
                 selPawn.jobs.TryTakeOrderedJob(wearRackJob);
             });
             return FloatMenuUtility.DecoratePrioritizedTask(equipFromOption, selPawn, armorRack, "ReservedBy");
+        }
+
+        private FloatMenuOption TakeAmmoOption(ArmorRack armorRack, Pawn selPawn, Thing thing)
+        {
+            var transferToOption = new FloatMenuOption("ArmorRacks_EquipThing".Translate(thing.LabelShort), delegate
+            {
+                int to = thing.stackCount;
+                Dialog_Slider window = new Dialog_Slider("ArmorRacks_EquipCount".Translate(thing.LabelShort, thing), 1, to, delegate (int selectCount)
+                {
+                    var target_info = new LocalTargetInfo(armorRack);
+                    var wearRackJob = new Job(ArmorRacksJobDefOf.ArmorRacks_JobWearRackSpecific, target_info, thing);
+                    wearRackJob.count = selectCount;
+                    selPawn.jobs.TryTakeOrderedJob(wearRackJob);
+                }, thing.stackCount);
+                Find.WindowStack.Add(window);
+            });
+            return FloatMenuUtility.DecoratePrioritizedTask(transferToOption, selPawn, armorRack, "ReservedBy");
         }
     }
 
